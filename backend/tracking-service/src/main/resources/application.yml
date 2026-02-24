@@ -1,0 +1,20 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: tracking-service
+  datasource:
+    url: jdbc:postgresql://localhost:5433/tracking_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+# JWT secret must match auth-service for token validation
+jwt:
+  secret: ${JWT_SECRET:FreelanceCLI-SuperSecretKey-ChangeInProduction-Min32Chars}

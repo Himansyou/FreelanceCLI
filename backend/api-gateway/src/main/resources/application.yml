@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: ${GATEWAY_AUTH_URI:http://localhost:8081}
+          predicates:
+            - Path=/auth/**
+        - id: tracking
+          uri: ${GATEWAY_TRACKING_URI:http://localhost:8082}
+          predicates:
+            - Path=/tracking/**
+        - id: reports
+          uri: ${GATEWAY_REPORTS_URI:http://localhost:8083}
+          predicates:
+            - Path=/reports/**
+
+# CORS for web client (optional; can be done in each service too)
+# Global CORS is typically configured in code for Gateway
