@@ -4,82 +4,65 @@
 # Web: run separately (npm run dev in web/)
 
 services:
+
   postgres-auth:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASS}
       POSTGRES_DB: auth_db
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   postgres-tracking:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${TRACKING_DB_USER}
+      POSTGRES_PASSWORD: ${TRACKING_DB_PASS}
       POSTGRES_DB: tracking_db
     ports:
       - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
   auth-service:
     build:
       context: ./backend
       dockerfile: auth-service/Dockerfile
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      JWT_SECRET: FreelanceCLI-SuperSecretKey-ChangeInProduction-Min32Chars
+      SPRING_PROFILES_ACTIVE: docker
+      AUTH_DB_USER: ${AUTH_DB_USER}
+      AUTH_DB_PASS: ${AUTH_DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8081:8081"
     depends_on:
-      postgres-auth:
-        condition: service_healthy
+      - postgres-auth
 
   tracking-service:
     build:
       context: ./backend
       dockerfile: tracking-service/Dockerfile
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-tracking:5432/tracking_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      JWT_SECRET: FreelanceCLI-SuperSecretKey-ChangeInProduction-Min32Chars
+      SPRING_PROFILES_ACTIVE: docker
+      TRACKING_DB_USER: ${TRACKING_DB_USER}
+      TRACKING_DB_PASS: ${TRACKING_DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8082:8082"
     depends_on:
-      postgres-tracking:
-        condition: service_healthy
+      - postgres-tracking
 
   report-service:
     build:
       context: ./backend
       dockerfile: report-service/Dockerfile
     environment:
-      SPRING_DATA_REDIS_HOST: redis
-      TRACKING_BASE_URL: http://tracking-service:8082
-      JWT_SECRET: FreelanceCLI-SuperSecretKey-ChangeInProduction-Min32Chars
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8083:8083"
     depends_on:
@@ -91,7 +74,7 @@ services:
       context: ./backend
       dockerfile: api-gateway/Dockerfile
     environment:
-      # Override route URIs for Docker network
+      SPRING_PROFILES_ACTIVE: docker
       GATEWAY_AUTH_URI: http://auth-service:8081
       GATEWAY_TRACKING_URI: http://tracking-service:8082
       GATEWAY_REPORTS_URI: http://report-service:8083
