@@ -59,6 +59,7 @@ public class ReportService {
 
         String cacheKey = CACHE_KEY_PREFIX + userId + ":" + (projectId != null ? projectId : "all") + ":" + from + ":" + to;
         String cached = redisTemplate.opsForValue().get(cacheKey);
+        System.out.println("CACHE HIT: " + (cached != null));
         if (cached != null) {
             try {
                 return objectMapper.readValue(cached, ReportSummaryResponse.class);

@@ -33,6 +33,7 @@ public class TrackingClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearerToken);
+        System.out.println(bearerToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(url.toString(), HttpMethod.GET, entity, String.class);
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {

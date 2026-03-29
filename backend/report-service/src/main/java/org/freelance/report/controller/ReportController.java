@@ -30,12 +30,15 @@ public class ReportController {
             HttpServletRequest request
     ) {
         String userId = authentication.getName();
-        String bearer = request.getHeader("Authorization");
-        if (bearer != null && bearer.startsWith("Bearer ")) {
-            bearer = bearer.substring(7);
+        String authHeader = request.getHeader("Authorization");
+        String bearer;
+        System.out.println("[ReportController] Incoming Authorization header: " + authHeader);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            bearer = authHeader.substring(7);
         } else {
             bearer = "";
         }
+        System.out.println("[ReportController] Extracted JWT: " + bearer);
         ReportSummaryResponse report = reportService.getSummary(userId, bearer, projectId, from, to);
         return ResponseEntity.ok(report);
     }

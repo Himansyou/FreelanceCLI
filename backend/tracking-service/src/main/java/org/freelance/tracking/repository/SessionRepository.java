@@ -14,14 +14,18 @@ import java.util.UUID;
  */
 public interface SessionRepository extends JpaRepository<Session, UUID> {
 
-    @Query("SELECT s FROM Session s WHERE s.userId = :userId " +
-           "AND (:projectId IS NULL OR s.projectId = :projectId) " +
-           "AND (:from IS NULL OR s.startTime >= :from) " +
-           "AND (:to IS NULL OR s.endTime <= :to) ORDER BY s.startTime DESC")
+    @Query("""
+SELECT s FROM Session s
+WHERE s.userId = :userId
+AND (:projectId IS NULL OR s.projectId = :projectId)
+AND s.startTime >= :from
+AND s.endTime <= :to
+ORDER BY s.startTime DESC
+""")
     List<Session> findByUserAndOptionalFilters(
-        @Param("userId") UUID userId,
-        @Param("projectId") String projectId,
-        @Param("from") Instant from,
-        @Param("to") Instant to
+            @Param("userId") UUID userId,
+            @Param("projectId") String projectId,
+            @Param("from") Instant from,
+            @Param("to") Instant to
     );
 }

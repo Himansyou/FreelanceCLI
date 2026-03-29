@@ -1,17 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../auth'
 import { getSessions } from '../api'
-import AppShell from '../layout/AppShell'
-import Input from '../ui/Input'
-import Card from '../ui/Card'
 
 type Session = {
   id: string
   projectId: string
   startTime: string
-  endTime: string
+  endTime: string | null
   durationMinutes: number
-  createdAt: string
+  syncedAt: string
 }
 
 export default function Sessions() {
@@ -19,64 +16,113 @@ export default function Sessions() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [projectFilter, setProjectFilter] = useState('')
 
   useEffect(() => {
     if (!token) return
-    getSessions(token, projectFilter ? { projectId: projectFilter } : undefined)
+    getSessions(token)
       .then((data) => setSessions(data.sessions || []))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [token, projectFilter])
+  }, [token])
+
+  const sortedSessions = useMemo(() => {
+    return [...sessions].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+  }, [sessions])
+
+  const totalBillable = sortedSessions.reduce((acc, s) => acc + (s.durationMinutes || 0), 0) / 60
+  const totalRounded = Math.round(totalBillable * 100) / 100
 
   return (
-    <AppShell title="Sessions">
-      <div className="row row--between row--wrap">
-        <div style={{ minWidth: 260, maxWidth: 420, width: '100%' }}>
-          <Input
-            label="Project filter"
-            placeholder="e.g. website-redesign"
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-          />
+    <div className="max-w-6xl mx-auto space-y-8 p-8 w-full h-full min-h-0 overflow-y-auto">
+      {/* Hero Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h2 className="text-4xl font-extrabold tracking-tight text-white mb-2">Work Sessions</h2>
+          <p className="text-on-surface-variant font-mono text-sm">Total Sessions: {sessions.length} • Total Hours: {totalRounded}h</p>
         </div>
       </div>
 
-      {error && <p className="alert alert--error">{error}</p>}
+      {error && <div className="text-error bg-error/10 p-4 rounded-xl font-bold">{error}</div>}
 
-      <Card className="tableCard">
-        {loading ? (
-          <p className="muted">Loading…</p>
-        ) : (
-          <>
-            <div className="tableWrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Project</th>
-                    <th>Start</th>
-                    <th>End</th>
-                    <th style={{ textAlign: 'right' }}>Duration</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((s) => (
-                    <tr key={s.id}>
-                      <td>
-                        <span className="chip chip--subtle">{s.projectId}</span>
-                      </td>
-                      <td>{new Date(s.startTime).toLocaleString()}</td>
-                      <td>{new Date(s.endTime).toLocaleString()}</td>
-                      <td style={{ textAlign: 'right' }}>{s.durationMinutes} min</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {/* Stats Summary Card */}
+      <div className="bg-surface-container rounded-3xl p-8 flex flex-col justify-between border-none shadow-lg">
+        <div>
+          <h4 className="text-lg font-bold mb-6">Performance Summary</h4>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <span className="text-on-surface-variant text-sm font-mono">Total Duration</span>
+              <span className="text-xl font-bold text-primary">{totalRounded} Hrs</span>
             </div>
-            {sessions.length === 0 && <p className="muted">No sessions found.</p>}
-          </>
-        )}
-      </Card>
-    </AppShell>
+            <div className="flex justify-between items-center">
+              <span className="text-on-surface-variant text-sm font-mono">Sync Status</span>
+              <span className="text-xl font-bold">{loading ? 'Syncing...' : '100%'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-on-surface-variant text-sm font-mono">Total Recorded Sessions</span>
+              <span className="text-xl font-bold text-tertiary">{sessions.length}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Historical Log */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <h3 className="text-xl font-bold">Historical Timeline</h3>
+        </div>
+
+        {/* Log Card List */}
+        <div className="space-y-3">
+          {loading ? (
+            <div className="text-center py-8 text-on-surface-variant animate-pulse font-mono">Loading sessions...</div>
+          ) : sortedSessions.length === 0 ? (
+            <div className="text-center py-8 text-on-surface-variant font-mono">No work sessions synced yet.</div>
+          ) : (
+            sortedSessions.map((s) => {
+              const start = new Date(s.startTime)
+              const end = s.endTime ? new Date(s.endTime) : null
+              const isOngoing = !end
+              const durHrs = s.durationMinutes ? (s.durationMinutes / 60).toFixed(2) : '0.00'
+
+              return (
+                <div key={s.id} className="group flex items-center gap-6 bg-surface-container-low hover:bg-surface-container rounded-2xl p-5 transition-all cursor-pointer border-none shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+                  <div className="w-12 h-12 bg-surface-container-high rounded-xl flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <span className="material-symbols-outlined text-primary" data-icon="history">history</span>
+                  </div>
+                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
+                    <div>
+                      <p className="text-sm font-bold truncate max-w-[200px]" title={s.projectId}>{s.projectId}</p>
+                      <p className="text-[11px] text-on-surface-variant uppercase tracking-wider font-mono">Project ID</p>
+                    </div>
+                    
+                    <div className="hidden md:block text-center">
+                      <p className="text-sm font-medium">{start.toLocaleDateString()}</p>
+                      <p className="text-[11px] text-on-surface-variant font-mono">
+                        {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {end ? end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ongoing'}
+                      </p>
+                    </div>
+
+                    <div className="text-right md:text-center">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${isOngoing ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'}`}>
+                        {isOngoing ? 'Live' : 'Synced'}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-lg font-black font-mono tracking-tighter text-white">
+                        {isOngoing ? '--' : `${durHrs}h`}
+                      </p>
+                      <p className="text-[10px] text-on-surface-variant font-mono">
+                        {s.durationMinutes} min
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </section>
+    </div>
   )
 }

@@ -6,7 +6,6 @@ import org.freelance.tracking.dto.SessionsListResponse;
 import org.freelance.tracking.dto.SyncRequest;
 import org.freelance.tracking.dto.SyncResponse;
 import org.freelance.tracking.service.SessionService;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -42,12 +41,33 @@ public class SessionController {
     @GetMapping("/sessions")
     public ResponseEntity<SessionsListResponse> list(
             @RequestParam(required = false) String projectId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
             Authentication authentication
     ) {
         UUID userId = UUID.fromString(authentication.getName());
-        List<SessionResponse> sessions = sessionService.listSessions(userId, projectId, from, to);
+
+        String cleanProjectId = (projectId == null || projectId.isBlank() || "null".equalsIgnoreCase(projectId))
+                ? null : projectId;
+
+        Instant cleanFrom = null;
+        Instant cleanTo = null;
+
+        try {
+            if (from != null && !from.isBlank() && !"null".equalsIgnoreCase(from)) {
+                cleanFrom = Instant.parse(from);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            if (to != null && !to.isBlank() && !"null".equalsIgnoreCase(to)) {
+                cleanTo = Instant.parse(to);
+            }
+        } catch (Exception ignored) {}
+
+        List<SessionResponse> sessions =
+                sessionService.listSessions(userId, cleanProjectId, cleanFrom, cleanTo);
+
         return ResponseEntity.ok(new SessionsListResponse(sessions));
     }
 }

@@ -4,62 +4,78 @@ import { useAuth } from '../auth'
 import Button from '../ui/Button'
 import { cx } from '../ui/cx'
 
-function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
+function NavItem({
+  to,
+  icon,
+  children,
+}: {
+  to: string
+  icon: string
+  children: React.ReactNode
+}) {
   return (
     <NavLink
       to={to}
-      className={({ isActive }) => cx('nav__link', isActive && 'nav__link--active')}
+      className={({ isActive }) =>
+        cx('sidenav__link', isActive && 'sidenav__link--active')
+      }
     >
-      {children}
+      <span className="material-symbols-outlined" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="sidenav__label">{children}</span>
     </NavLink>
   )
 }
 
 export default function AppShell({
   title,
-  actions,
   children,
 }: {
   title: string
-  actions?: React.ReactNode
   children: React.ReactNode
 }) {
   const { userId, logout } = useAuth()
 
   return (
-    <div className="app">
-      <header className="topbar">
-        <div className="topbar__inner">
-          <div className="topbar__left">
-            <div className="brand brand--small" aria-label="FreelanceCLI">
-              <span className="brand__mark" aria-hidden="true">
-                FC
-              </span>
-              <span className="brand__text">FreelanceCLI</span>
-            </div>
-            <nav className="nav" aria-label="Primary">
-              <NavItem to="/">Dashboard</NavItem>
-              <NavItem to="/sessions">Sessions</NavItem>
-              <NavItem to="/report">Report</NavItem>
-            </nav>
-          </div>
-
-          <div className="topbar__right">
-            {actions}
-            {userId && <span className="chip">{userId.slice(0, 8)}…</span>}
-            <Button variant="ghost" size="sm" onClick={logout}>
-              Log out
-            </Button>
-          </div>
+    <div className="shell">
+      <aside className="sidenav" aria-label="Sidebar">
+        <div className="sidenav__brand">
+          <h1 className="sidenav__title">FreelanceCLI</h1>
+          <p className="sidenav__version">v1.0.0</p>
         </div>
-      </header>
 
-      <main className="container">
-        <div className="pageHeader">
-          <h1 className="pageHeader__title">{title}</h1>
+        <nav className="sidenav__nav" aria-label="Primary">
+          <NavItem to="/" icon="dashboard">
+            Dashboard
+          </NavItem>
+          <NavItem to="/sessions" icon="terminal">
+            Sessions
+          </NavItem>
+          <NavItem to="/report" icon="analytics">
+            Reports
+          </NavItem>
+        </nav>
+
+        <div className="sidenav__footer">
+          {userId && <div className="sidenav__user mono">{userId.slice(0, 8)}…</div>}
+          <Button variant="ghost" size="sm" onClick={logout}>
+            Logout
+          </Button>
         </div>
-        {children}
-      </main>
+      </aside>
+
+      <div>
+        <header className="topbar">
+          <div className="topbar__inner">
+            <h2 className="topbar__title">{title}</h2>
+          </div>
+        </header>
+
+        <main className="page min-h-screen overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Sessions from './pages/Sessions'
 import Report from './pages/Report'
+import DashboardLayout from './layout/DashboardLayout'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
@@ -24,9 +25,11 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
         <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
-        <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/sessions" element={<PrivateRoute><Sessions /></PrivateRoute>} />
-        <Route path="/report" element={<PrivateRoute><Report /></PrivateRoute>} />
+        
+        <Route path="/" element={<PrivateRoute><DashboardLayout><Dashboard /></DashboardLayout></PrivateRoute>} />
+        <Route path="/sessions" element={<PrivateRoute><DashboardLayout><Sessions /></DashboardLayout></PrivateRoute>} />
+        <Route path="/report" element={<PrivateRoute><DashboardLayout><Report /></DashboardLayout></PrivateRoute>} />
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

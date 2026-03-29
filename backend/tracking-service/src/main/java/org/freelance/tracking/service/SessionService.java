@@ -50,8 +50,21 @@ public class SessionService {
     }
 
     public List<SessionResponse> listSessions(UUID userId, String projectId, Instant from, Instant to) {
-        List<Session> list = sessionRepository.findByUserAndOptionalFilters(userId, projectId, from, to);
-        return list.stream().map(this::toResponse).collect(Collectors.toList());
+
+        // ✅ FIX: avoid nulls → PostgreSQL safe
+        Instant safeFrom = (from != null) ? from : Instant.EPOCH;
+        Instant safeTo = (to != null) ? to : Instant.now();
+
+        List<Session> list = sessionRepository.findByUserAndOptionalFilters(
+                userId,
+                projectId,
+                safeFrom,
+                safeTo
+        );
+
+        return list.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     private SessionResponse toResponse(Session s) {

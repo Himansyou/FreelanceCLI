@@ -48,6 +48,8 @@ export async function getReportSummary(token: string, params?: { projectId?: str
   if (params?.from) q.set('from', params.from)
   if (params?.to) q.set('to', params.to)
   const url = `${API_BASE}/reports/summary${q.toString() ? '?' + q : ''}`
+  console.log('[getReportSummary] Fetching:', url)
+  console.log('[getReportSummary] JWT token:', token)
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   })
