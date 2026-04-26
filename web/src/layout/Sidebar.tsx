@@ -14,7 +14,8 @@ export default function Sidebar() {
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
     { name: 'Sessions', path: '/sessions', icon: 'terminal' },
-    { name: 'Reports', path: '/report', icon: 'analytics' },
+    { name: 'Reports', path: '/reports', icon: 'analytics' },
+    { name: 'Settings', path: '/settings', icon: 'settings' },
     { name: 'Profile', path: '/profile', icon: 'account_circle' },
   ];
 

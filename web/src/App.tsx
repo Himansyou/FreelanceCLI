@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import Sessions from './pages/Sessions'
 import Report from './pages/Report'
 import Profile from './pages/Profile'
+import Settings from './pages/Settings'
 import DashboardLayout from './layout/DashboardLayout'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -38,7 +39,8 @@ export default function App() {
         
         <Route path="/dashboard" element={<PrivateRoute><DashboardLayout><Dashboard /></DashboardLayout></PrivateRoute>} />
         <Route path="/sessions" element={<PrivateRoute><DashboardLayout><Sessions /></DashboardLayout></PrivateRoute>} />
-        <Route path="/report" element={<PrivateRoute><DashboardLayout><Report /></DashboardLayout></PrivateRoute>} />
+        <Route path="/reports" element={<PrivateRoute><DashboardLayout><Report /></DashboardLayout></PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute><DashboardLayout><Settings /></DashboardLayout></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><DashboardLayout><Profile /></DashboardLayout></PrivateRoute>} />
         
         <Route path="*" element={<Navigate to="/" replace />} />

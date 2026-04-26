@@ -4,6 +4,7 @@ import org.freelance.auth.domain.User;
 import org.freelance.auth.dto.LoginRequest;
 import org.freelance.auth.dto.LoginResponse;
 import org.freelance.auth.dto.RegisterRequest;
+import org.freelance.auth.dto.UpdateDefaultRateRequest;
 import org.freelance.auth.dto.UserResponse;
 import org.freelance.auth.repository.UserRepository;
 import org.freelance.auth.security.JwtService;
@@ -42,7 +43,7 @@ public class AuthApplicationService {
         user.setEmail(request.getEmail().trim().toLowerCase());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user = userRepository.save(user);
-        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt());
+        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt(), user.getDefaultHourlyRate());
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -59,6 +60,15 @@ public class AuthApplicationService {
     public UserResponse getUserById(UUID userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt());
+        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt(), user.getDefaultHourlyRate());
+    }
+
+    @Transactional
+    public UserResponse updateDefaultRate(UUID userId, UpdateDefaultRateRequest request) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setDefaultHourlyRate(request.getHourlyRate());
+        user = userRepository.save(user);
+        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt(), user.getDefaultHourlyRate());
     }
 }

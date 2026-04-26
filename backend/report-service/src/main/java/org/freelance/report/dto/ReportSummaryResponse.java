@@ -14,6 +14,7 @@ public class ReportSummaryResponse {
     private String to;
     private long totalMinutes;
     private int sessionCount;
+    private double totalEarnings;
     private List<ProjectSummary> byProject;
 
     public String getUserId() { return userId; }
@@ -28,6 +29,8 @@ public class ReportSummaryResponse {
     public void setTotalMinutes(long totalMinutes) { this.totalMinutes = totalMinutes; }
     public int getSessionCount() { return sessionCount; }
     public void setSessionCount(int sessionCount) { this.sessionCount = sessionCount; }
+    public double getTotalEarnings() { return totalEarnings; }
+    public void setTotalEarnings(double totalEarnings) { this.totalEarnings = totalEarnings; }
     public List<ProjectSummary> getByProject() { return byProject; }
     public void setByProject(List<ProjectSummary> byProject) { this.byProject = byProject; }
 
@@ -35,12 +38,14 @@ public class ReportSummaryResponse {
         private String projectId;
         private long totalMinutes;
         private int sessionCount;
+        private double earnings;
 
         public ProjectSummary() {}
-        public ProjectSummary(String projectId, long totalMinutes, int sessionCount) {
+        public ProjectSummary(String projectId, long totalMinutes, int sessionCount, double earnings) {
             this.projectId = projectId;
             this.totalMinutes = totalMinutes;
             this.sessionCount = sessionCount;
+            this.earnings = earnings;
         }
         public String getProjectId() { return projectId; }
         public void setProjectId(String projectId) { this.projectId = projectId; }
@@ -48,5 +53,7 @@ public class ReportSummaryResponse {
         public void setTotalMinutes(long totalMinutes) { this.totalMinutes = totalMinutes; }
         public int getSessionCount() { return sessionCount; }
         public void setSessionCount(int sessionCount) { this.sessionCount = sessionCount; }
+        public double getEarnings() { return earnings; }
+        public void setEarnings(double earnings) { this.earnings = earnings; }
     }
 }

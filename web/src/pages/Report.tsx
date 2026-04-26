@@ -3,12 +3,13 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { useAuth } from '../auth'
 import { getReportSummary } from '../api'
 
-type ProjectSummary = { projectId: string; totalMinutes: number; sessionCount: number }
+type ProjectSummary = { projectId: string; totalMinutes: number; sessionCount: number; earnings: number }
 type Summary = {
   totalMinutes: number
   sessionCount: number
   from: string
   to: string
+  totalEarnings: number
   byProject: ProjectSummary[]
 }
 
@@ -40,6 +41,11 @@ export default function Report() {
   const totalHours = useMemo(() => {
     if (!summary) return 0;
     return (summary.totalMinutes / 60).toFixed(1);
+  }, [summary])
+
+  const totalEarnings = useMemo(() => {
+    if (!summary) return 0;
+    return summary.totalEarnings.toFixed(2);
   }, [summary])
 
   return (
@@ -84,7 +90,7 @@ export default function Report() {
       {error && <div className="text-error bg-error/10 p-4 rounded-xl font-bold">{error}</div>}
 
       {/* Bento Grid Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-surface-container-low p-6 rounded-3xl flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
           <div>
             <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant">Hours</span>
@@ -95,6 +101,19 @@ export default function Report() {
           </div>
           <div className="mt-4 h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
             <div className="h-full bg-primary w-full rounded-full animate-pulse shadow-[0_0_10px_rgba(156,255,147,0.5)]"></div>
+          </div>
+        </div>
+
+        <div className="bg-surface-container-low p-6 rounded-3xl flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+          <div>
+            <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant">Earnings</span>
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-3xl font-mono font-bold">{loading ? '--' : `$${totalEarnings}`}</span>
+              <span className="text-secondary text-xs font-bold">total</span>
+            </div>
+          </div>
+          <div className="mt-4 h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+            <div className="h-full bg-secondary w-full rounded-full shadow-[0_0_10px_rgba(137,250,170,0.5)]"></div>
           </div>
         </div>
 
@@ -192,12 +211,18 @@ export default function Report() {
             {summary?.byProject?.map((p, i) => {
               const perc = summary.totalMinutes ? ((p.totalMinutes / summary.totalMinutes) * 100).toFixed(0) : 0;
               const col = COLORS[i % COLORS.length];
+              const hours = (p.totalMinutes / 60).toFixed(1);
+              const earnings = p.earnings.toFixed(2);
 
               return (
                 <div className="space-y-2" key={p.projectId}>
                   <div className="flex justify-between text-xs uppercase tracking-tighter">
                     <span className="text-on-surface font-bold truncate max-w-[150px]">{p.projectId}</span>
                     <span className="text-on-surface-variant">{perc}%</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-on-surface-variant">{hours}h</span>
+                    <span className="text-primary font-bold">${earnings}</span>
                   </div>
                   <div className="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${perc}%`, backgroundColor: col, boxShadow: `0 0 12px ${col}40` }}></div>

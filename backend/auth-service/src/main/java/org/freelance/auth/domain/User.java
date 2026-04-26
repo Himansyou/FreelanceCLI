@@ -29,6 +29,9 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "default_hourly_rate")
+    private Double defaultHourlyRate;
+
     @PrePersist
     public void prePersist() {
         if (id == null) id = UUID.randomUUID();
@@ -43,4 +46,6 @@ public class User {
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public Double getDefaultHourlyRate() { return defaultHourlyRate; }
+    public void setDefaultHourlyRate(Double defaultHourlyRate) { this.defaultHourlyRate = defaultHourlyRate; }
 }
