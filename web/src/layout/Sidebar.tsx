@@ -1,15 +1,21 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { logout } = useAuth();
 
+  function handleLogout() {
+    logout();
+    navigate('/');
+  }
+
   const navLinks = [
-    { name: 'Dashboard', path: '/', icon: 'dashboard' },
+    { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
     { name: 'Sessions', path: '/sessions', icon: 'terminal' },
     { name: 'Reports', path: '/report', icon: 'analytics' },
-    { name: 'Settings', path: '#', icon: 'settings' },
+    { name: 'Profile', path: '/profile', icon: 'account_circle' },
   ];
 
   return (
@@ -40,16 +46,8 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-auto px-2 space-y-4">
-        <button className="w-full py-3 bg-primary-container text-on-primary font-bold rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-[0_0_15px_rgba(0,252,64,0.2)]">
-          <span className="material-symbols-outlined text-sm" data-icon="add">add</span>
-          Start Session
-        </button>
-        <div className="pt-6 space-y-1">
-          <span className="flex items-center gap-3 px-4 py-2 text-[#ABABAB] font-medium hover:text-white transition-colors cursor-pointer">
-            <span className="material-symbols-outlined" data-icon="account_circle">account_circle</span>
-            <span className="text-sm">Profile</span>
-          </span>
-          <span onClick={logout} className="flex items-center gap-3 px-4 py-2 text-[#ABABAB] font-medium hover:text-error transition-colors cursor-pointer">
+        <div className="pt-2 space-y-2">
+          <span onClick={handleLogout} className="flex items-center gap-3 px-4 py-2 text-[#ABABAB] font-medium hover:text-error transition-colors cursor-pointer">
             <span className="material-symbols-outlined" data-icon="logout">logout</span>
             <span className="text-sm">Logout</span>
           </span>

@@ -54,4 +54,11 @@ public class AuthApplicationService {
         String token = jwtService.createToken(user.getId());
         return new LoginResponse(token, jwtService.getExpirationSeconds(), user.getId());
     }
+
+    @Transactional(readOnly = true)
+    public UserResponse getUserById(UUID userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt());
+    }
 }

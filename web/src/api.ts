@@ -29,6 +29,20 @@ export async function login(email: string, password: string) {
   return res.json()
 }
 
+export type AuthProfile = {
+  id: string
+  email: string
+  createdAt: string
+}
+
+export async function getMyProfile(token: string): Promise<AuthProfile> {
+  const res = await fetch(`${API_BASE}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error('Failed to load profile')
+  return res.json()
+}
+
 export async function getSessions(token: string, params?: { projectId?: string; from?: string; to?: string }) {
   const q = new URLSearchParams()
   if (params?.projectId) q.set('projectId', params.projectId)

@@ -37,8 +37,8 @@ export default function Sessions() {
       {/* Hero Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-extrabold tracking-tight text-white mb-2">Work Sessions</h2>
-          <p className="text-on-surface-variant font-mono text-sm">Total Sessions: {sessions.length} • Total Hours: {totalRounded}h</p>
+          <h2 className="text-4xl font-extrabold tracking-tight text-white mb-2">Sessions</h2>
+          <p className="text-on-surface-variant font-mono text-sm">{sessions.length} sessions • {totalRounded}h total</p>
         </div>
       </div>
 
@@ -47,19 +47,19 @@ export default function Sessions() {
       {/* Stats Summary Card */}
       <div className="bg-surface-container rounded-3xl p-8 flex flex-col justify-between border-none shadow-lg">
         <div>
-          <h4 className="text-lg font-bold mb-6">Performance Summary</h4>
+          <h4 className="text-lg font-bold mb-6">Summary</h4>
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <span className="text-on-surface-variant text-sm font-mono">Total Duration</span>
-              <span className="text-xl font-bold text-primary">{totalRounded} Hrs</span>
+              <span className="text-on-surface-variant text-sm font-mono">Total Time</span>
+              <span className="text-xl font-bold text-primary">{totalRounded}h</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-on-surface-variant text-sm font-mono">Sessions</span>
+              <span className="text-xl font-bold">{sessions.length}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-on-surface-variant text-sm font-mono">Sync Status</span>
-              <span className="text-xl font-bold">{loading ? 'Syncing...' : '100%'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-on-surface-variant text-sm font-mono">Total Recorded Sessions</span>
-              <span className="text-xl font-bold text-tertiary">{sessions.length}</span>
+              <span className="text-xl font-bold">{loading ? 'Syncing...' : 'Complete'}</span>
             </div>
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function Sessions() {
       {/* Historical Log */}
       <section className="space-y-4">
         <div className="flex items-center justify-between px-2">
-          <h3 className="text-xl font-bold">Historical Timeline</h3>
+          <h3 className="text-xl font-bold">History</h3>
         </div>
 
         {/* Log Card List */}

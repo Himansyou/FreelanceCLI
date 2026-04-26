@@ -47,8 +47,8 @@ export default function Report() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-white/5">
         <div>
-          <h2 className="text-4xl font-headline font-black tracking-tighter text-white">Performance Analytics</h2>
-          <p className="text-on-surface-variant mt-1 font-body">Real-time breakdown of development velocity and billing cycles.</p>
+          <h2 className="text-4xl font-headline font-black tracking-tighter text-white">Reports</h2>
+          <p className="text-on-surface-variant mt-1 font-body">Time breakdown and analytics</p>
         </div>
         
         <div className="flex flex-wrap gap-3 items-center">
@@ -87,10 +87,10 @@ export default function Report() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-surface-container-low p-6 rounded-3xl flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
           <div>
-            <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant">Active Hours</span>
+            <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant">Hours</span>
             <div className="flex items-baseline gap-2 mt-2">
               <span className="text-3xl font-mono font-bold">{loading ? '--' : totalHours}</span>
-              <span className="text-primary text-xs font-bold">Hrs</span>
+              <span className="text-primary text-xs font-bold">total</span>
             </div>
           </div>
           <div className="mt-4 h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
@@ -100,10 +100,10 @@ export default function Report() {
 
         <div className="bg-surface-container-low p-6 rounded-3xl flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
           <div>
-            <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant">Total Sessions</span>
+            <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant">Sessions</span>
             <div className="flex items-baseline gap-2 mt-2">
               <span className="text-3xl font-mono font-bold">{loading ? '--' : summary?.sessionCount || 0}</span>
-              <span className="text-secondary text-xs font-bold">In Range</span>
+              <span className="text-secondary text-xs font-bold">recorded</span>
             </div>
           </div>
           <div className="mt-4 h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
@@ -113,10 +113,10 @@ export default function Report() {
 
         <div className="bg-surface-container-low p-6 rounded-3xl flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
           <div>
-            <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant">Active Projects</span>
+            <span className="text-xs font-label uppercase tracking-widest text-on-surface-variant">Projects</span>
             <div className="flex items-baseline gap-2 mt-2">
               <span className="text-3xl font-mono font-bold">{loading ? '--' : summary?.byProject?.length || 0}</span>
-              <span className="text-tertiary text-xs font-bold">Monitored</span>
+              <span className="text-tertiary text-xs font-bold">active</span>
             </div>
           </div>
           <div className="mt-4 h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
@@ -131,8 +131,8 @@ export default function Report() {
         <div className="col-span-12 lg:col-span-2 bg-surface-container p-8 rounded-[3rem] relative overflow-hidden group shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h3 className="text-xl font-bold">Time Investment by Project</h3>
-              <p className="text-sm text-on-surface-variant">Total logged minutes mapped out across all active systems.</p>
+              <h3 className="text-xl font-bold">Project Time Distribution</h3>
+              <p className="text-sm text-on-surface-variant">Hours logged per project this period</p>
             </div>
           </div>
           
@@ -146,7 +146,10 @@ export default function Report() {
                   <YAxis
                     stroke="var(--outline)"
                     fontSize={11}
-                    tickFormatter={(v) => `${Math.floor(v / 60)}h`}
+                    tickFormatter={(v) => {
+                      if (v >= 60) return `${Math.floor(v / 60)}h`
+                      return `${Math.floor(v)}m`
+                    }}
                     tick={{fill: '#ababab'}} axisLine={false} tickLine={false}
                   />
                   <Tooltip
@@ -158,7 +161,14 @@ export default function Report() {
                       color: '#ffffff',
                       backdropFilter: 'blur(10px)'
                     }}
-                    formatter={(v: number) => [`${Math.floor(v/60)}h ${v%60}m`, 'Time Spent']}
+                    formatter={(v: number) => {
+                      const hours = Math.floor(v / 60)
+                      const minutes = v % 60
+                      if (hours > 0) {
+                        return [`${hours}h ${minutes}m`, 'Time Spent']
+                      }
+                      return [`${minutes}m`, 'Time Spent']
+                    }}
                   />
                   <Bar dataKey="totalMinutes" name="Time" radius={[6, 6, 0, 0]} maxBarSize={60}>
                     {summary.byProject.map((_, i) => (
@@ -175,8 +185,8 @@ export default function Report() {
 
         {/* Project Matrix Mini-Card */}
         <div className="col-span-12 lg:col-span-1 bg-surface-container-high p-8 rounded-[3rem] flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-          <h3 className="text-xl font-bold mb-1">Time Density</h3>
-          <p className="text-sm text-on-surface-variant mb-8">Workload split by project.</p>
+          <h3 className="text-xl font-bold mb-1">Distribution</h3>
+          <p className="text-sm text-on-surface-variant mb-8">Time by project</p>
           
           <div className="flex-1 space-y-6 overflow-y-auto">
             {summary?.byProject?.map((p, i) => {

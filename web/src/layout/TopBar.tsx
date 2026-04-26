@@ -5,21 +5,11 @@ export default function TopBar() {
         <span className="material-symbols-outlined text-on-surface-variant mr-3" data-icon="search">search</span>
         <input 
           className="bg-transparent border-none focus:ring-0 text-sm w-full text-on-surface outline-none" 
-          placeholder="Search sessions or logs..." 
+          placeholder="Search sessions..." 
           type="text"
         />
       </div>
-      <div className="flex items-center gap-4">
-        <button className="p-2 text-[#ABABAB] hover:text-white transition-opacity">
-          <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-        </button>
-        <button className="p-2 text-[#ABABAB] hover:text-white transition-opacity">
-          <span className="material-symbols-outlined" data-icon="help_outline">help_outline</span>
-        </button>
-        <button className="ml-2 bg-surface-container-high px-5 py-2.5 rounded-2xl font-semibold text-sm hover:bg-surface-bright transition-all border border-outline-variant/20">
-          New Project
-        </button>
-      </div>
+      <div />
     </header>
   );
 }

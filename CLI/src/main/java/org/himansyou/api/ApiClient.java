@@ -2,6 +2,7 @@ package org.himansyou.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.himansyou.api.LoginBody;
 import okhttp3.*;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,7 +16,9 @@ public class ApiClient {
 
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private final OkHttpClient client = new OkHttpClient();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper()
+        .registerModule(new com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
+        .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
     private final String baseUrl;
 
     public ApiClient(String baseUrl) {
@@ -67,7 +70,7 @@ public class ApiClient {
     public record LoginResult(String accessToken, String userId, long expiresIn) {}
     public record SyncResult(int synced, int rejected) {}
 
-    public record LoginBody(String email, String password) {}
+    // ...existing code...
     public record SessionPayload(UUID id, String projectId, String startTime, String endTime, int durationMinutes, String deviceId) {}
     public record SyncRequestPayload(List<SessionPayload> sessions) {}
 }

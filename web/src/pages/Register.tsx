@@ -28,7 +28,7 @@ export default function Register() {
       await apiRegister(email, password)
       const data = await apiLogin(email, password)
       login(data.accessToken, data.userId)
-      navigate('/')
+      navigate('/dashboard')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Registration failed')
     } finally {

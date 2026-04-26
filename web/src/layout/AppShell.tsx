@@ -46,7 +46,7 @@ export default function AppShell({
         </div>
 
         <nav className="sidenav__nav" aria-label="Primary">
-          <NavItem to="/" icon="dashboard">
+          <NavItem to="/dashboard" icon="dashboard">
             Dashboard
           </NavItem>
           <NavItem to="/sessions" icon="terminal">

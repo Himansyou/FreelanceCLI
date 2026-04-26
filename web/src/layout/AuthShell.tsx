@@ -13,26 +13,21 @@ export default function AuthShell({
   footer?: React.ReactNode
 }) {
   return (
-    <div className="auth">
-      <div className="auth__bg" aria-hidden="true" />
-      <div className="auth__content">
-        <header className="auth__header">
-          <Link to="/" className="brand">
-            <span className="brand__mark" aria-hidden="true">
-              FC
-            </span>
-            <span className="brand__text">FreelanceCLI</span>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-md bg-surface-container rounded-2xl shadow-lg p-8 md:p-10 border border-outline-variant/20">
+        <header className="mb-8 flex flex-col items-center">
+          <Link to="/" className="flex items-center gap-2 mb-2">
+            <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-lg" aria-hidden="true">FC</span>
+            <span className="text-xl font-black tracking-tighter text-on-surface">FreelanceCLI</span>
           </Link>
         </header>
-
-        <main className="auth__main">
-          <section className="authCard">
-            <h1 className="authCard__title">{title}</h1>
-            {subtitle && <p className="authCard__subtitle">{subtitle}</p>}
+        <main>
+          <section>
+            <h1 className="text-2xl font-black text-on-surface mb-2">{title}</h1>
+            {subtitle && <p className="text-on-surface-variant text-sm mb-6">{subtitle}</p>}
             {children}
           </section>
-
-          {footer && <div className="auth__footer">{footer}</div>}
+          {footer && <div className="mt-8 text-center text-on-surface-variant text-sm">{footer}</div>}
         </main>
       </div>
     </div>

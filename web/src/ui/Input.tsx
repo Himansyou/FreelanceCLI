@@ -14,22 +14,26 @@ export default function Input({ label, hint, error, className, id, ...props }: I
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
 
   return (
-    <label className="field" htmlFor={inputId}>
-      {label && <span className="field__label">{label}</span>}
+    <label className="flex flex-col gap-1 mb-4" htmlFor={inputId}>
+      {label && <span className="text-xs font-mono uppercase tracking-wider text-on-surface-variant ml-1">{label}</span>}
       <input
         id={inputId}
-        className={cx('input', error && 'input--error', className)}
+        className={cx(
+          'w-full bg-surface-container-highest border border-outline-variant/20 rounded-2xl py-3.5 px-4 text-on-surface placeholder:text-on-surface-variant/30 focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm',
+          error && 'border-error',
+          className
+        )}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         {...props}
       />
       {hint && !error && (
-        <span id={hintId} className="field__hint">
+        <span id={hintId} className="text-xs text-on-surface-variant/60 mt-1 ml-1">
           {hint}
         </span>
       )}
       {error && (
-        <span id={errorId} className="field__error">
+        <span id={errorId} className="text-xs text-error mt-1 ml-1">
           {error}
         </span>
       )}
