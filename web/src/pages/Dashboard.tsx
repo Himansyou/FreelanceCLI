@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth'
-import { getReportSummary, getProjectRate, setProjectRate } from '../api'
+import { getReportSummary, getProjectRate, setProjectRate, getSessions } from '../api'
 
 type ProjectSummary = { projectId: string; totalMinutes: number; sessionCount: number; earnings: number }
 type Summary = {
@@ -13,9 +13,25 @@ type Summary = {
   byProject: ProjectSummary[]
 }
 
+type Session = {
+  id: string
+  projectId: string
+  startTime: string
+  endTime: string | null
+  durationMinutes: number
+  syncedAt: string
+}
+
+type DayActivity = {
+  date: string
+  minutes: number
+  sessions: number
+}
+
 export default function Dashboard() {
   const { token } = useAuth()
   const [summary, setSummary] = useState<Summary | null>(null)
+  const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [editingProject, setEditingProject] = useState<string | null>(null)
   const [projectRates, setProjectRates] = useState<Record<string, number>>({})
@@ -26,9 +42,13 @@ export default function Dashboard() {
   useEffect(() => {
     if (!token) return
     setLoading(true)
-    getReportSummary(token)
-      .then((summaryData) => {
+    Promise.all([
+      getReportSummary(token),
+      getSessions(token)
+    ])
+      .then(([summaryData, sessionsData]) => {
         setSummary(summaryData)
+        setSessions(sessionsData.sessions || [])
         // Fetch rates for all projects
         if (summaryData.byProject) {
           summaryData.byProject.forEach(project => {
@@ -60,6 +80,90 @@ export default function Dashboard() {
       console.error('Failed to update rate:', error)
     }
   }
+
+  // Generate GitHub-like heatmap data (last 365 days)
+  const heatmapData = useMemo(() => {
+    const today = new Date()
+    const oneYearAgo = new Date(today)
+    oneYearAgo.setDate(oneYearAgo.getDate() - 364)
+
+    const dayMap = new Map<string, DayActivity>()
+
+    // Initialize all days with 0 activity
+    for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0]
+      dayMap.set(dateStr, { date: dateStr, minutes: 0, sessions: 0 })
+    }
+
+    // Fill in actual session data
+    sessions.forEach(session => {
+      const sessionDate = new Date(session.startTime).toISOString().split('T')[0]
+      if (dayMap.has(sessionDate)) {
+        const existing = dayMap.get(sessionDate)!
+        existing.minutes += session.durationMinutes || 0
+        existing.sessions += 1
+      }
+    })
+
+    return Array.from(dayMap.values())
+  }, [sessions])
+
+  // Get activity level for coloring (0-4 scale like GitHub)
+  const getActivityLevel = (minutes: number): number => {
+    if (minutes === 0) return 0
+    if (minutes < 30) return 1
+    if (minutes < 120) return 2
+    if (minutes < 240) return 3
+    return 4
+  }
+
+  // Get color for activity level
+  const getActivityColor = (level: number): string => {
+    const colors = [
+      'bg-surface-variant',      // 0 - no activity
+      'bg-primary/20',           // 1 - low activity
+      'bg-primary/40',           // 2 - medium activity
+      'bg-primary/60',           // 3 - high activity
+      'bg-primary/80'            // 4 - very high activity
+    ]
+    return colors[level]
+  }
+
+  // Group data by weeks for the heatmap grid
+  const weeks = useMemo(() => {
+    const weeks: DayActivity[][] = []
+    let currentWeek: DayActivity[] = []
+
+    heatmapData.forEach((day, index) => {
+      currentWeek.push(day)
+      // Start new week every 7 days, but handle the first week specially
+      if (currentWeek.length === 7 || index === heatmapData.length - 1) {
+        weeks.push(currentWeek)
+        currentWeek = []
+      }
+    })
+
+    return weeks
+  }, [heatmapData])
+
+  // Calculate stats for the heatmap
+  const totalActiveDays = heatmapData.filter(d => d.minutes > 0).length
+  const currentStreak = useMemo(() => {
+    let streak = 0
+    const today = new Date()
+    for (let i = 0; i < 365; i++) {
+      const checkDate = new Date(today)
+      checkDate.setDate(checkDate.getDate() - i)
+      const dateStr = checkDate.toISOString().split('T')[0]
+      const dayData = heatmapData.find(d => d.date === dateStr)
+      if (dayData && dayData.minutes > 0) {
+        streak++
+      } else if (i > 0) {
+        break
+      }
+    }
+    return streak
+  }, [heatmapData])
 
   return (
     <div className="p-8 space-y-8">
@@ -153,6 +257,69 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* GitHub-like Activity Heatmap */}
+      <section className="bg-surface-container p-8 rounded-3xl space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold">Activity Heatmap</h3>
+            <p className="text-sm text-on-surface-variant mt-1">
+              {totalActiveDays} active days in the last year • {currentStreak} day current streak
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+            <span>Less</span>
+            <div className="flex gap-1">
+              {[0, 1, 2, 3, 4].map(level => (
+                <div
+                  key={level}
+                  className={`w-3 h-3 rounded-sm ${getActivityColor(level)}`}
+                />
+              ))}
+            </div>
+            <span>More</span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <div className="flex gap-1 min-w-max">
+            {/* Day labels */}
+            <div className="flex flex-col gap-1 text-[10px] text-on-surface-variant mr-2">
+              <div className="h-3" />
+              <div>Mon</div>
+              <div className="h-3" />
+              <div>Wed</div>
+              <div className="h-3" />
+              <div>Fri</div>
+              <div className="h-3" />
+              <div>Sun</div>
+            </div>
+
+            {/* Heatmap grid */}
+            <div className="flex gap-1">
+              {weeks.map((week, weekIndex) => (
+                <div key={weekIndex} className="flex flex-col gap-1">
+                  {week.map((day) => {
+                    const activityLevel = getActivityLevel(day.minutes)
+                    const date = new Date(day.date)
+                    const isToday = date.toDateString() === new Date().toDateString()
+
+                    return (
+                      <div
+                        key={day.date}
+                        className={`w-3 h-3 rounded-sm ${getActivityColor(activityLevel)} ${
+                          isToday ? 'ring-1 ring-white/50' : ''
+                        }`}
+                        title={`${day.date}: ${day.sessions} sessions, ${(day.minutes / 60).toFixed(1)}h`}
+                      />
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Project Rates Section */}
       {summary?.byProject && summary.byProject.length > 0 && (
         <section className="space-y-4">
@@ -197,18 +364,20 @@ export default function Dashboard() {
                             placeholder="Rate"
                             className="w-20 bg-surface-container-highest border-none rounded-lg text-sm px-2 py-1 text-on-surface focus:ring-1 focus:ring-primary/50 outline-none"
                             autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                const input = e.target as HTMLInputElement
-                                const rate = parseFloat(input.value)
-                                if (rate > 0) {
-                                  handleRateChange(project.projectId, rate)
-                                }
-                              } else if (e.key === 'Escape') {
-                                setEditingProject(null)
+                            id={`rate-input-${project.projectId}`}
+                          />
+                          <button
+                            onClick={() => {
+                              const input = document.getElementById(`rate-input-${project.projectId}`) as HTMLInputElement
+                              const rate = parseFloat(input.value)
+                              if (rate > 0) {
+                                handleRateChange(project.projectId, rate)
                               }
                             }}
-                          />
+                            className="px-3 py-1 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 transition-opacity"
+                          >
+                            Save
+                          </button>
                           <button
                             onClick={() => setEditingProject(null)}
                             className="text-on-surface-variant hover:text-white transition-colors"
@@ -232,6 +401,6 @@ export default function Dashboard() {
           </div>
         </section>
       )}
-    </div>
+      </div>
   )
 }

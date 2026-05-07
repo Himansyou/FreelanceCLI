@@ -4,14 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.freelance.report.client.ProjectSettingsClient;
 import org.freelance.report.client.TrackingClient;
+import org.freelance.report.dto.ProjectDetailResponse;
 import org.freelance.report.dto.ReportSummaryResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +91,70 @@ public class ReportService {
         }
     }
 
+    /**
+     * Returns detailed project data for HTML export with weekly summaries and session details.
+     */
+    public ProjectDetailResponse getProjectDetail(String userId, String bearerToken, String projectId) {
+        List<TrackingClient.SessionItem> sessions = trackingClient.getSessions(bearerToken, projectId, null, null);
+        Double projectRate = projectSettingsClient.getProjectRate(bearerToken, projectId);
+        Double defaultRate = projectSettingsClient.getUserDefaultRate(bearerToken);
+        double hourlyRate = projectRate != null ? projectRate : (defaultRate != null ? defaultRate : 0.0);
+
+        if (sessions.isEmpty()) {
+            ProjectDetailResponse empty = new ProjectDetailResponse();
+            empty.setProjectId(projectId);
+            empty.setProjectName(projectId);
+            empty.setHourlyRate(hourlyRate);
+            empty.setTotalMinutes(0);
+            empty.setSessionCount(0);
+            empty.setTotalEarnings(0.0);
+            empty.setWeeklySummaries(new ArrayList<>());
+            empty.setSessions(new ArrayList<>());
+            return empty;
+        }
+
+        // Calculate project timeline
+        Instant projectStart = sessions.stream().map(TrackingClient.SessionItem::getStartTime).min(Instant::compareTo).orElse(Instant.now());
+        Instant projectEnd = sessions.stream().map(TrackingClient.SessionItem::getEndTime).filter(Objects::nonNull).max(Instant::compareTo).orElse(Instant.now());
+
+        // Calculate totals
+        long totalMinutes = sessions.stream().mapToInt(TrackingClient.SessionItem::getDurationMinutes).sum();
+        double totalEarnings = (totalMinutes / 60.0) * hourlyRate;
+
+        // Build weekly summaries
+        List<ProjectDetailResponse.WeeklySummary> weeklySummaries = buildWeeklySummaries(sessions, hourlyRate);
+
+        // Build session details
+        List<ProjectDetailResponse.SessionDetail> sessionDetails = sessions.stream()
+            .map(s -> {
+                double earnings = (s.getDurationMinutes() / 60.0) * hourlyRate;
+                return new ProjectDetailResponse.SessionDetail(
+                    s.getId().toString(),
+                    s.getStartTime(),
+                    s.getEndTime(),
+                    s.getDurationMinutes(),
+                    earnings,
+                    s.getDeviceId()
+                );
+            })
+            .sorted(Comparator.comparing(ProjectDetailResponse.SessionDetail::getStartTime).reversed())
+            .collect(Collectors.toList());
+
+        ProjectDetailResponse detail = new ProjectDetailResponse();
+        detail.setProjectId(projectId);
+        detail.setProjectName(projectId);
+        detail.setProjectStart(projectStart);
+        detail.setProjectEnd(projectEnd);
+        detail.setTotalMinutes(totalMinutes);
+        detail.setSessionCount(sessions.size());
+        detail.setTotalEarnings(totalEarnings);
+        detail.setHourlyRate(hourlyRate);
+        detail.setWeeklySummaries(weeklySummaries);
+        detail.setSessions(sessionDetails);
+
+        return detail;
+    }
+
     private Instant parseDate(String s) {
         if (s == null || s.isBlank()) return null;
         try {
@@ -125,5 +188,33 @@ public class ReportService {
         r.setByProject(list);
         r.setTotalEarnings(totalEarnings);
         return r;
+    }
+
+    private List<ProjectDetailResponse.WeeklySummary> buildWeeklySummaries(List<TrackingClient.SessionItem> sessions, double hourlyRate) {
+        Map<String, List<TrackingClient.SessionItem>> byWeek = sessions.stream()
+            .collect(Collectors.groupingBy(s -> getWeekKey(s.getStartTime())));
+
+        List<ProjectDetailResponse.WeeklySummary> summaries = new ArrayList<>();
+        for (Map.Entry<String, List<TrackingClient.SessionItem>> entry : byWeek.entrySet()) {
+            String weekKey = entry.getKey();
+            List<TrackingClient.SessionItem> weekSessions = entry.getValue();
+
+            long totalMinutes = weekSessions.stream().mapToInt(TrackingClient.SessionItem::getDurationMinutes).sum();
+            double earnings = (totalMinutes / 60.0) * hourlyRate;
+
+            String[] dates = weekKey.split("_");
+            summaries.add(new ProjectDetailResponse.WeeklySummary(dates[0], dates[1], totalMinutes, weekSessions.size(), earnings));
+        }
+
+        return summaries.stream()
+            .sorted(Comparator.comparing(ProjectDetailResponse.WeeklySummary::getWeekStart).reversed())
+            .collect(Collectors.toList());
+    }
+
+    private String getWeekKey(Instant instant) {
+        LocalDate date = instant.atZone(ZoneOffset.UTC).toLocalDate();
+        LocalDate startOfWeek = date.with(DayOfWeek.MONDAY);
+        LocalDate endOfWeek = date.with(DayOfWeek.SUNDAY);
+        return startOfWeek.toString() + "_" + endOfWeek.toString();
     }
 }

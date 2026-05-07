@@ -1,5 +1,6 @@
 package org.freelance.report.controller;
 
+import org.freelance.report.dto.ProjectDetailResponse;
 import org.freelance.report.dto.ReportSummaryResponse;
 import org.freelance.report.service.ReportService;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,24 @@ public class ReportController {
         System.out.println("[ReportController] Extracted JWT: " + bearer);
         ReportSummaryResponse report = reportService.getSummary(userId, bearer, projectId, from, to);
         return ResponseEntity.ok(report);
+    }
+
+    @GetMapping("/project-detail")
+    public ResponseEntity<ProjectDetailResponse> projectDetail(
+            @RequestParam String projectId,
+            Authentication authentication,
+            HttpServletRequest request
+    ) {
+        String userId = authentication.getName();
+        String authHeader = request.getHeader("Authorization");
+        String bearer;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            bearer = authHeader.substring(7);
+        } else {
+            bearer = "";
+        }
+        ProjectDetailResponse detail = reportService.getProjectDetail(userId, bearer, projectId);
+        return ResponseEntity.ok(detail);
     }
 
     /**

@@ -79,4 +79,27 @@ public class ProjectSettingsClient {
             return null;
         }
     }
+
+    /** Fetches a specific project's hourly rate. */
+    public Double getProjectRate(String bearerToken, String projectId) {
+        String url = trackingBaseUrl + "/project-settings/" + projectId;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(bearerToken);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                return null;
+            }
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            if (root.has("hourlyRate")) {
+                return root.get("hourlyRate").asDouble();
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

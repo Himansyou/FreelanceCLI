@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { useAuth } from '../auth'
-import { getReportSummary } from '../api'
+import { getReportSummary, getMyProfile, getProjectDetail, type ProjectDetail } from '../api'
+import ProjectExport from '../components/ProjectExport'
 
 type ProjectSummary = { projectId: string; totalMinutes: number; sessionCount: number; earnings: number }
 type Summary = {
@@ -23,6 +24,12 @@ export default function Report() {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [projectId, setProjectId] = useState('')
+  const [defaultRate, setDefaultRate] = useState<number | null>(null)
+  const [showRateWarning, setShowRateWarning] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [showProjectExport, setShowProjectExport] = useState(false)
+  const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null)
+  const [loadingProjectDetail, setLoadingProjectDetail] = useState(false)
 
   useEffect(() => {
     if (!token) return
@@ -32,11 +39,83 @@ export default function Report() {
     if (projectId && projectId !== 'null') params.projectId = projectId
 
     setLoading(true)
-    getReportSummary(token, params)
-      .then(setSummary)
+    Promise.all([
+      getReportSummary(token, params),
+      getMyProfile(token)
+    ])
+      .then(([reportData, profile]) => {
+        setSummary(reportData)
+        setDefaultRate(profile.defaultHourlyRate || null)
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [token, from, to, projectId])
+
+  const handleExport = () => {
+    if (!summary || !token) return
+
+    // Check if user has rates set
+    if (!defaultRate && (!summary.byProject || summary.byProject.length === 0)) {
+      setShowRateWarning(true)
+      return
+    }
+
+    setExporting(true)
+
+    try {
+      // Create CSV content
+      const headers = ['Project ID', 'Hours', 'Sessions', 'Earnings', 'Rate Type']
+      const rows = summary.byProject.map(project => {
+        const hours = (project.totalMinutes / 60).toFixed(2)
+        const earnings = project.earnings.toFixed(2)
+        const rateType = 'Project-specific'
+        return [project.projectId, hours, project.sessionCount, earnings, rateType]
+      })
+
+      // Add total row
+      const totalHours = (summary.totalMinutes / 60).toFixed(2)
+      const totalEarnings = summary.totalEarnings.toFixed(2)
+      rows.push(['TOTAL', totalHours, summary.sessionCount, totalEarnings, 'Summary'])
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.join(','))
+      ].join('\n')
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      const dateRange = from && to ? `${from}_to_${to}` : 'all_time'
+      link.setAttribute('download', `freelance_report_${dateRange}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (err) {
+      console.error('Export failed:', err)
+      setError('Failed to export report')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleProjectExport = async () => {
+    if (!projectId || !token) return
+
+    setLoadingProjectDetail(true)
+    try {
+      const detail = await getProjectDetail(token, projectId)
+      setProjectDetail(detail)
+      setShowProjectExport(true)
+    } catch (err) {
+      console.error('Failed to load project detail:', err)
+      setError('Failed to load project details for export')
+    } finally {
+      setLoadingProjectDetail(false)
+    }
+  }
 
   const totalHours = useMemo(() => {
     if (!summary) return 0;
@@ -73,16 +152,28 @@ export default function Report() {
             className="bg-surface-container-highest border-none rounded-xl text-sm px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary/50 outline-none"
             title="End Date"
           />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Filter by Project"
-            value={projectId} 
-            onChange={(e) => setProjectId(e.target.value)} 
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
             className="bg-surface-container-highest border-none rounded-xl text-sm px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary/50 outline-none w-32 md:w-48"
           />
-           <button className="bg-primary text-on-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <button
+            onClick={handleProjectExport}
+            disabled={loadingProjectDetail || loading || !projectId || !summary}
+            className="bg-secondary text-on-secondary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+              <span className="material-symbols-outlined text-sm" data-icon="description">description</span>
+              {loadingProjectDetail ? 'Loading...' : 'Project Report'}
+          </button>
+           <button
+             onClick={handleExport}
+             disabled={exporting || loading || !summary}
+             className="bg-primary text-on-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+           >
                <span className="material-symbols-outlined text-sm" data-icon="download">download</span>
-               Export
+               {exporting ? 'Exporting...' : 'Export CSV'}
            </button>
         </div>
       </div>
@@ -241,6 +332,47 @@ export default function Report() {
        {/* Background Accents (Subtle Glows) */}
        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
        <div className="fixed bottom-0 left-64 w-[300px] h-[300px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+
+       {/* Rate Warning Dialog */}
+       {showRateWarning && (
+         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+           <div className="bg-surface-container p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl">
+             <div className="flex items-center gap-3 mb-4">
+               <span className="material-symbols-outlined text-warning text-3xl" data-icon="warning">warning</span>
+               <h3 className="text-xl font-bold">No Rates Set</h3>
+             </div>
+             <p className="text-on-surface-variant mb-6">
+               You haven't set up hourly rates yet. The exported CSV will show time data but earnings calculations may be incomplete.
+             </p>
+             <div className="flex gap-3">
+               <button
+                 onClick={() => setShowRateWarning(false)}
+                 className="flex-1 px-4 py-3 bg-surface-variant text-on-surface-variant rounded-xl font-bold hover:opacity-90 transition-opacity"
+               >
+                 Cancel
+               </button>
+               <button
+                 onClick={() => {
+                   setShowRateWarning(false)
+                   handleExport()
+                 }}
+                 className="flex-1 px-4 py-3 bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity"
+               >
+                 Export Anyway
+               </button>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Project Export Dialog */}
+       {showProjectExport && projectDetail && (
+         <ProjectExport
+           projectDetail={projectDetail}
+           onExport={() => setShowProjectExport(false)}
+           onCancel={() => setShowProjectExport(false)}
+         />
+       )}
     </div>
   )
 }

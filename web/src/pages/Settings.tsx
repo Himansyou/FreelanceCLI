@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../auth'
-import { getMyProfile, updateDefaultRate, getProjectRates, setProjectRate, deleteProjectRate } from '../api'
+import { getMyProfile, updateDefaultRate, getProjectRates, setProjectRate, deleteProjectRate, getReportSummary } from '../api'
+
+type ProjectSummary = { projectId: string; totalMinutes: number; sessionCount: number; earnings: number }
+type Summary = {
+  totalMinutes: number
+  sessionCount: number
+  from: string
+  to: string
+  totalEarnings: number
+  byProject: ProjectSummary[]
+}
 
 export default function Settings() {
   const { token } = useAuth()
   const [defaultRate, setDefaultRate] = useState<number | null>(null)
   const [projectRates, setProjectRates] = useState<Record<string, number>>({})
+  const [availableProjects, setAvailableProjects] = useState<ProjectSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -18,9 +29,10 @@ export default function Settings() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [profile, rates] = await Promise.all([
+      const [profile, rates, summary] = await Promise.all([
         getMyProfile(token),
-        getProjectRates(token)
+        getProjectRates(token),
+        getReportSummary(token)
       ])
       setDefaultRate(profile.defaultHourlyRate || null)
       const ratesMap: Record<string, number> = {}
@@ -28,8 +40,14 @@ export default function Settings() {
         ratesMap[rate.projectId] = rate.hourlyRate
       })
       setProjectRates(ratesMap)
+      setAvailableProjects(summary.byProject || [])
     } catch (err) {
-      setError('Failed to load settings')
+      // Check if it's a 404 error (no projects yet)
+      if (err instanceof Error && err.message.includes('404')) {
+        setError('Currently you have no ongoing projects. Start tracking time to create projects and set rates.')
+      } else {
+        setError('Failed to load settings')
+      }
       console.error(err)
     } finally {
       setLoading(false)
@@ -37,7 +55,10 @@ export default function Settings() {
   }
 
   const handleDefaultRateChange = async (newRate: number) => {
-    if (!token) return
+    if (!token) {
+      setError('Authentication required')
+      return
+    }
     try {
       setSaving(true)
       await updateDefaultRate(token, newRate)
@@ -171,6 +192,7 @@ export default function Settings() {
           <AddProjectRateForm
             onAdd={(projectId, rate) => handleProjectRateChange(projectId, rate)}
             existingProjects={Object.keys(projectRates)}
+            availableProjects={availableProjects}
             disabled={saving}
           />
         </div>
@@ -182,10 +204,12 @@ export default function Settings() {
 function AddProjectRateForm({
   onAdd,
   existingProjects,
+  availableProjects,
   disabled
 }: {
   onAdd: (projectId: string, rate: number) => void
   existingProjects: string[]
+  availableProjects: ProjectSummary[]
   disabled: boolean
 }) {
   const [projectId, setProjectId] = useState('')
@@ -200,38 +224,62 @@ function AddProjectRateForm({
     }
   }
 
+  // Filter out projects that already have rates set
+  const availableProjectsForDropdown = availableProjects.filter(
+    project => !existingProjects.includes(project.projectId)
+  )
+
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-4">
-      <div className="flex-1">
-        <input
-          type="text"
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-          placeholder="Project ID"
-          className="w-full bg-surface-container-highest border-none rounded-xl text-sm px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary/50 outline-none"
-        />
-      </div>
-      <div className="w-32">
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-sm">$</span>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={rate}
-            onChange={(e) => setRate(e.target.value)}
-            placeholder="Rate"
-            className="w-full bg-surface-container-highest border-none rounded-xl text-sm px-8 py-3 text-on-surface focus:ring-1 focus:ring-primary/50 outline-none"
-          />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {availableProjectsForDropdown.length > 0 ? (
+        <>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <select
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full bg-surface-container-highest border-none rounded-xl text-sm px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary/50 outline-none cursor-pointer"
+                disabled={disabled}
+              >
+                <option value="">Select a project</option>
+                {availableProjectsForDropdown.map(project => (
+                  <option key={project.projectId} value={project.projectId}>
+                    {project.projectId} ({(project.totalMinutes / 60).toFixed(1)}h)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="w-32">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-sm">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={rate}
+                  onChange={(e) => setRate(e.target.value)}
+                  placeholder="Rate"
+                  className="w-full bg-surface-container-highest border-none rounded-xl text-sm px-8 py-3 text-on-surface focus:ring-1 focus:ring-primary/50 outline-none"
+                  disabled={disabled}
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={disabled || !projectId || !rate || parseFloat(rate) <= 0}
+              className="px-4 py-3 bg-secondary text-on-secondary rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Add
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-4 text-on-surface-variant text-sm">
+          {availableProjects.length === 0
+            ? "No projects available. Start tracking time to create projects."
+            : "All projects already have rates set."}
         </div>
-      </div>
-      <button
-        type="submit"
-        disabled={disabled || !projectId || !rate || parseFloat(rate) <= 0}
-        className="px-4 py-3 bg-secondary text-on-secondary rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Add
-      </button>
+      )}
     </form>
   )
 }

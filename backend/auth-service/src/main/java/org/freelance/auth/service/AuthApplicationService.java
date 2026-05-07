@@ -41,9 +41,10 @@ public class AuthApplicationService {
         }
         User user = new User();
         user.setEmail(request.getEmail().trim().toLowerCase());
+        user.setUsername(request.getUsername().trim());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user = userRepository.save(user);
-        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt(), user.getDefaultHourlyRate());
+        return new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getCreatedAt(), user.getDefaultHourlyRate());
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -60,7 +61,7 @@ public class AuthApplicationService {
     public UserResponse getUserById(UUID userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt(), user.getDefaultHourlyRate());
+        return new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getCreatedAt(), user.getDefaultHourlyRate());
     }
 
     @Transactional
@@ -69,6 +70,6 @@ public class AuthApplicationService {
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         user.setDefaultHourlyRate(request.getHourlyRate());
         user = userRepository.save(user);
-        return new UserResponse(user.getId(), user.getEmail(), user.getCreatedAt(), user.getDefaultHourlyRate());
+        return new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getCreatedAt(), user.getDefaultHourlyRate());
     }
 }

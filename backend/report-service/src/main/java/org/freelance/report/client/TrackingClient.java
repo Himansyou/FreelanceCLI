@@ -49,6 +49,9 @@ public class TrackingClient {
                     item.setId(node.has("id") ? node.get("id").asText() : null);
                     item.setProjectId(node.has("projectId") ? node.get("projectId").asText() : null);
                     item.setDurationMinutes(node.has("durationMinutes") ? node.get("durationMinutes").asInt() : 0);
+                    item.setStartTime(node.has("startTime") ? Instant.parse(node.get("startTime").asText()) : null);
+                    item.setEndTime(node.has("endTime") ? Instant.parse(node.get("endTime").asText()) : null);
+                    item.setDeviceId(node.has("deviceId") ? node.get("deviceId").asText() : null);
                     list.add(item);
                 }
             }
@@ -62,11 +65,21 @@ public class TrackingClient {
         private String id;
         private String projectId;
         private int durationMinutes;
+        private Instant startTime;
+        private Instant endTime;
+        private String deviceId;
+
         public String getId() { return id; }
         public void setId(String id) { this.id = id; }
         public String getProjectId() { return projectId; }
         public void setProjectId(String projectId) { this.projectId = projectId; }
         public int getDurationMinutes() { return durationMinutes; }
         public void setDurationMinutes(int durationMinutes) { this.durationMinutes = durationMinutes; }
+        public Instant getStartTime() { return startTime; }
+        public void setStartTime(Instant startTime) { this.startTime = startTime; }
+        public Instant getEndTime() { return endTime; }
+        public void setEndTime(Instant endTime) { this.endTime = endTime; }
+        public String getDeviceId() { return deviceId; }
+        public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
     }
 }

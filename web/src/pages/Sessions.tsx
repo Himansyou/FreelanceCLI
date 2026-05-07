@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../auth'
+import { useSearchParams } from 'react-router-dom'
 import { getSessions } from '../api'
 
 type Session = {
@@ -13,6 +14,8 @@ type Session = {
 
 export default function Sessions() {
   const { token } = useAuth()
+  const [searchParams] = useSearchParams()
+  const searchQuery = searchParams.get('search') || ''
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -25,9 +28,18 @@ export default function Sessions() {
       .finally(() => setLoading(false))
   }, [token])
 
+  const filteredSessions = useMemo(() => {
+    if (!searchQuery) return sessions
+    const query = searchQuery.toLowerCase()
+    return sessions.filter(session =>
+      session.projectId.toLowerCase().includes(query) ||
+      session.id.toLowerCase().includes(query)
+    )
+  }, [sessions, searchQuery])
+
   const sortedSessions = useMemo(() => {
-    return [...sessions].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-  }, [sessions])
+    return [...filteredSessions].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+  }, [filteredSessions])
 
   const totalBillable = sortedSessions.reduce((acc, s) => acc + (s.durationMinutes || 0), 0) / 60
   const totalRounded = Math.round(totalBillable * 100) / 100
@@ -38,7 +50,9 @@ export default function Sessions() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h2 className="text-4xl font-extrabold tracking-tight text-white mb-2">Sessions</h2>
-          <p className="text-on-surface-variant font-mono text-sm">{sessions.length} sessions • {totalRounded}h total</p>
+          <p className="text-on-surface-variant font-mono text-sm">
+            {searchQuery ? `Found ${sortedSessions.length} results for "${searchQuery}"` : `${sessions.length} sessions • ${totalRounded}h total`}
+          </p>
         </div>
       </div>
 
@@ -76,7 +90,9 @@ export default function Sessions() {
           {loading ? (
             <div className="text-center py-8 text-on-surface-variant animate-pulse font-mono">Loading sessions...</div>
           ) : sortedSessions.length === 0 ? (
-            <div className="text-center py-8 text-on-surface-variant font-mono">No work sessions synced yet.</div>
+            <div className="text-center py-8 text-on-surface-variant font-mono">
+              {searchQuery ? `No sessions found matching "${searchQuery}"` : 'No work sessions synced yet.'}
+            </div>
           ) : (
             sortedSessions.map((s) => {
               const start = new Date(s.startTime)

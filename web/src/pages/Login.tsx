@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
-import { login as apiLogin } from '../api'
+import { login as apiLogin, getMyProfile } from '../api'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -19,7 +19,8 @@ export default function Login() {
     setLoading(true)
     try {
       const data = await apiLogin(email, password)
-      login(data.accessToken, data.userId)
+      const profile = await getMyProfile(data.accessToken)
+      login(data.accessToken, data.userId, profile.username || 'User')
       navigate('/dashboard')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed')
@@ -90,10 +91,10 @@ export default function Login() {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono uppercase tracking-[0.12em] text-on-surface-variant ml-1">Email</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant/50 text-[18px] pointer-events-none">mail</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 text-[18px] pointer-events-none">mail</span>
                   <input
-                    className="w-full bg-surface-container-highest border border-outline-variant/20 rounded-2xl py-3.5 pl-11 pr-5 text-on-surface placeholder:text-on-surface-variant/30 focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm"
-                    placeholder="you@example.com"
+                    className="w-full bg-[#1a1a1a] border border-gray-600 rounded-2xl py-3.5 pl-11 pr-5 text-gray-200 placeholder:!text-[#111] focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm"
+                    placeholder="Enter your email"
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
@@ -107,10 +108,10 @@ export default function Login() {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono uppercase tracking-[0.12em] text-on-surface-variant ml-1">Password</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant/50 text-[18px] pointer-events-none">lock</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 text-[18px] pointer-events-none">lock</span>
                   <input
-                    className="w-full bg-surface-container-highest border border-outline-variant/20 rounded-2xl py-3.5 pl-11 pr-12 text-on-surface placeholder:text-on-surface-variant/30 focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm"
-                    placeholder="••••••••••••"
+                    className="w-full bg-[#1a1a1a] border border-gray-600 rounded-2xl py-3.5 pl-11 pr-12 text-gray-200 placeholder:!text-[#111] focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm"
+                    placeholder="Enter your password"
                     type={showPass ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -120,7 +121,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPass(v => !v)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant/50 hover:text-on-surface-variant text-[18px] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 hover:text-gray-300 text-[18px] transition-colors"
                     tabIndex={-1}
                   >
                     {showPass ? 'visibility_off' : 'visibility'}

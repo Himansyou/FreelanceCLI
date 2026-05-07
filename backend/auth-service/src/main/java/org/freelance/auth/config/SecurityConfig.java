@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * Security configuration: permit /auth/register and /auth/login, protect others with JWT.
+ * CORS is handled by the API gateway.
  */
 @Configuration
 @EnableWebSecurity
