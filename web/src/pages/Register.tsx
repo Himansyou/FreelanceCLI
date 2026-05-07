@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
-import { login as apiLogin, register as apiRegister } from '../api'
+import { login as apiLogin, initiateRegistration, verifyRegistration } from '../api'
 
 export default function Register() {
   const [step, setStep] = useState(1)
@@ -9,6 +9,7 @@ export default function Register() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
@@ -44,12 +45,29 @@ export default function Register() {
     }
     setLoading(true)
     try {
-      await apiRegister(email, username, password)
-      const data = await apiLogin(email, password)
+      await initiateRegistration(email, username, password)
+      setStep(3)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to send OTP')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleOtpSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    if (otp.length !== 6) {
+      setError('Please enter a valid 6-digit OTP')
+      return
+    }
+    setLoading(true)
+    try {
+      const data = await verifyRegistration(email, otp)
       login(data.accessToken, data.userId, username)
       navigate('/dashboard')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+      setError(err instanceof Error ? err.message : 'OTP verification failed')
     } finally {
       setLoading(false)
     }
@@ -98,13 +116,13 @@ export default function Register() {
             <div className="mb-8">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 mb-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-secondary">Step {step} of 2</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-secondary">Step {step} of 3</span>
               </div>
               <h1 className="text-3xl font-black tracking-tighter text-on-surface mb-1">
-                {step === 1 ? 'Create account' : 'Almost there!'}
+                {step === 1 ? 'Create account' : step === 2 ? 'Almost there!' : 'Verify your email'}
               </h1>
               <p className="text-on-surface-variant text-sm">
-                {step === 1 ? 'Enter your email to get started' : 'Set up your username and password'}
+                {step === 1 ? 'Enter your email to get started' : step === 2 ? 'Set up your username and password' : `Enter the 6-digit code sent to ${email}`}
               </p>
             </div>
 
@@ -112,10 +130,11 @@ export default function Register() {
             <div className="flex gap-2 mb-6">
               <div className={`flex-1 h-1 rounded-full transition-all ${step >= 1 ? 'bg-secondary' : 'bg-outline-variant/30'}`} />
               <div className={`flex-1 h-1 rounded-full transition-all ${step >= 2 ? 'bg-secondary' : 'bg-outline-variant/30'}`} />
+              <div className={`flex-1 h-1 rounded-full transition-all ${step >= 3 ? 'bg-secondary' : 'bg-outline-variant/30'}`} />
             </div>
 
             {/* form */}
-            <form className="space-y-5" onSubmit={step === 1 ? handleEmailSubmit : handleFinalSubmit}>
+            <form className="space-y-5" onSubmit={step === 1 ? handleEmailSubmit : step === 2 ? handleFinalSubmit : handleOtpSubmit}>
               {error && (
                 <div className="flex items-center gap-2 text-error bg-error/10 border border-error/20 p-3 rounded-2xl text-sm">
                   <span className="material-symbols-outlined text-base">error</span>
@@ -141,7 +160,7 @@ export default function Register() {
                     />
                   </div>
                 </div>
-              ) : (
+              ) : step === 2 ? (
                 /* Step 2: Username and password */
                 <>
                   {/* username */}
@@ -212,6 +231,31 @@ export default function Register() {
                     </div>
                   </div>
                 </>
+              ) : (
+                /* Step 3: OTP verification */
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-mono uppercase tracking-[0.12em] text-on-surface-variant ml-1">Verification Code</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 text-[18px] pointer-events-none">verified</span>
+                    <input
+                      className="w-full bg-[#1a1a1a] border border-gray-600 rounded-2xl py-3.5 pl-11 pr-5 text-gray-200 placeholder:!text-[#111] focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm text-center tracking-[0.5em] font-mono"
+                      placeholder="000000"
+                      type="text"
+                      value={otp}
+                      onChange={e => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                        setOtp(value)
+                      }}
+                      disabled={loading}
+                      required
+                      autoFocus
+                      maxLength={6}
+                    />
+                  </div>
+                  <p className="text-xs text-on-surface-variant/60 text-center">
+                    Code expires in 20 minutes. Check your spam folder if you don't see it.
+                  </p>
+                </div>
               )}
 
               {/* submit */}
@@ -224,22 +268,22 @@ export default function Register() {
                   {loading ? (
                     <>
                       <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                      {step === 1 ? 'Processing…' : 'Creating account…'}
+                      {step === 1 ? 'Processing…' : step === 2 ? 'Sending OTP…' : 'Verifying…'}
                     </>
                   ) : (
                     <>
-                      {step === 1 ? 'Continue' : 'Create account'}
-                      <span className="material-symbols-outlined text-sm">{step === 1 ? 'arrow_forward' : 'check'}</span>
+                      {step === 1 ? 'Continue' : step === 2 ? 'Send verification code' : 'Verify & create account'}
+                      <span className="material-symbols-outlined text-sm">{step === 1 ? 'arrow_forward' : step === 2 ? 'send' : 'check'}</span>
                     </>
                   )}
                 </button>
               </div>
 
-              {/* back button for step 2 */}
-              {step === 2 && (
+              {/* back button for step 2 and 3 */}
+              {step > 1 && (
                 <button
                   type="button"
-                  onClick={() => setStep(1)}
+                  onClick={() => setStep(step - 1)}
                   className="w-full text-center text-sm text-on-surface-variant hover:text-on-surface transition-colors"
                   disabled={loading}
                 >

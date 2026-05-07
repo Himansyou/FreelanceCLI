@@ -17,6 +17,31 @@ export async function register(email: string, username: string, password: string
   return res.json()
 }
 
+export async function initiateRegistration(email: string, username: string, password: string) {
+  const res = await fetch(`${API_BASE}/auth/register/initiate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, username, password }),
+  })
+  if (!res.ok) {
+    throw new Error(await readApiError(res, 'Failed to send OTP'))
+  }
+  // No response body expected
+  return null
+}
+
+export async function verifyRegistration(email: string, otp: string) {
+  const res = await fetch(`${API_BASE}/auth/register/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp }),
+  })
+  if (!res.ok) {
+    throw new Error(await readApiError(res, 'OTP verification failed'))
+  }
+  return res.json()
+}
+
 export async function login(email: string, password: string) {
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',

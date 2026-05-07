@@ -3,7 +3,9 @@ package org.freelance.auth.controller;
 import jakarta.validation.Valid;
 import org.freelance.auth.dto.LoginRequest;
 import org.freelance.auth.dto.LoginResponse;
+import org.freelance.auth.dto.RegisterInitiateRequest;
 import org.freelance.auth.dto.RegisterRequest;
+import org.freelance.auth.dto.RegisterVerifyRequest;
 import org.freelance.auth.dto.UpdateDefaultRateRequest;
 import org.freelance.auth.dto.UserResponse;
 import org.freelance.auth.service.AuthApplicationService;
@@ -31,6 +33,18 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse user = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    }
+
+    @PostMapping("/register/initiate")
+    public ResponseEntity<Void> initiateRegistration(@Valid @RequestBody RegisterInitiateRequest request) {
+        authService.initiateRegistration(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/register/verify")
+    public ResponseEntity<LoginResponse> verifyRegistration(@Valid @RequestBody RegisterVerifyRequest request) {
+        LoginResponse response = authService.verifyRegistration(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")

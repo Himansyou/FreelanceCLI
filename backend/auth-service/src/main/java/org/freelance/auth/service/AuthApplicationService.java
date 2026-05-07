@@ -3,7 +3,9 @@ package org.freelance.auth.service;
 import org.freelance.auth.domain.User;
 import org.freelance.auth.dto.LoginRequest;
 import org.freelance.auth.dto.LoginResponse;
+import org.freelance.auth.dto.RegisterInitiateRequest;
 import org.freelance.auth.dto.RegisterRequest;
+import org.freelance.auth.dto.RegisterVerifyRequest;
 import org.freelance.auth.dto.UpdateDefaultRateRequest;
 import org.freelance.auth.dto.UserResponse;
 import org.freelance.auth.repository.UserRepository;
@@ -23,15 +25,18 @@ public class AuthApplicationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final OtpService otpService;
 
     public AuthApplicationService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService
+            JwtService jwtService,
+            OtpService otpService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.otpService = otpService;
     }
 
     @Transactional
@@ -45,6 +50,34 @@ public class AuthApplicationService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user = userRepository.save(user);
         return new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getCreatedAt(), user.getDefaultHourlyRate());
+    }
+
+    public void initiateRegistration(RegisterInitiateRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already registered");
+        }
+        String passwordHash = passwordEncoder.encode(request.getPassword());
+        otpService.generateAndSendOtp(email, request.getUsername().trim(), passwordHash);
+    }
+
+    @Transactional
+    public LoginResponse verifyRegistration(RegisterVerifyRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+        OtpService.OtpData otpData = otpService.validateOtp(email, request.getOtp());
+
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already registered");
+        }
+
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername(otpData.getUsername());
+        user.setPasswordHash(otpData.getPassword());
+        user = userRepository.save(user);
+
+        String token = jwtService.createToken(user.getId());
+        return new LoginResponse(token, jwtService.getExpirationSeconds(), user.getId());
     }
 
     public LoginResponse login(LoginRequest request) {
