@@ -1,5 +1,7 @@
 package org.freelance.auth.service;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
@@ -118,7 +120,10 @@ public class OtpService {
         private final String username;
         private final String password;
 
-        public OtpData(String otp, String username, String password) {
+        @JsonCreator
+        public OtpData(@JsonProperty("otp") String otp,
+                       @JsonProperty("username") String username,
+                       @JsonProperty("password") String password) {
             this.otp = otp;
             this.username = username;
             this.password = password;

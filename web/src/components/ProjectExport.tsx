@@ -2,43 +2,43 @@ import { useState } from 'react'
 import { ProjectDetail } from '../api'
 
 type ProjectExportProps = {
-  projectDetail: ProjectDetail
-  onExport: () => void
-  onCancel: () => void
+    projectDetail: ProjectDetail
+    onExport: () => void
+    onCancel: () => void
 }
 
 export default function ProjectExport({ projectDetail, onExport, onCancel }: ProjectExportProps) {
-  const [isExporting, setIsExporting] = useState(false)
+    const [isExporting, setIsExporting] = useState(false)
 
-  const handleExport = () => {
-    setIsExporting(true)
-    try {
-      const htmlContent = generateHTML(projectDetail)
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      link.setAttribute('href', url)
-      const safeProjectName = projectDetail.projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase()
-      link.setAttribute('download', `${safeProjectName}_report.html`)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-      onExport()
-    } catch (err) {
-      console.error('Export failed:', err)
-    } finally {
-      setIsExporting(false)
+    const handleExport = () => {
+        setIsExporting(true)
+        try {
+            const htmlContent = generateHTML(projectDetail)
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' })
+            const link = document.createElement('a')
+            const url = URL.createObjectURL(blob)
+            link.setAttribute('href', url)
+            const safeProjectName = projectDetail.projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+            link.setAttribute('download', `${safeProjectName}_report.html`)
+            link.style.visibility = 'hidden'
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(url)
+            onExport()
+        } catch (err) {
+            console.error('Export failed:', err)
+        } finally {
+            setIsExporting(false)
+        }
     }
-  }
 
-  const generateHTML = (detail: ProjectDetail): string => {
-    const totalHours = (detail.totalMinutes / 60).toFixed(2)
-    const projectStart = new Date(detail.projectStart).toLocaleDateString()
-    const projectEnd = new Date(detail.projectEnd).toLocaleDateString()
+    const generateHTML = (detail: ProjectDetail): string => {
+        const totalHours = (detail.totalMinutes / 60).toFixed(2)
+        const projectStart = new Date(detail.projectStart).toLocaleDateString()
+        const projectEnd = new Date(detail.projectEnd).toLocaleDateString()
 
-    return `<!DOCTYPE html>
+        return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -264,16 +264,16 @@ export default function ProjectExport({ projectDetail, onExport, onCancel }: Pro
                     </thead>
                     <tbody>
                         ${detail.sessions.map(session => {
-                            const startTime = new Date(session.startTime)
-                            const endTime = session.endTime ? new Date(session.endTime) : null
-                            const hours = (session.durationMinutes / 60).toFixed(2)
-                            return `
+            const startTime = new Date(session.startTime)
+            const endTime = session.endTime ? new Date(session.endTime) : null
+            const hours = (session.durationMinutes / 60).toFixed(2)
+            return `
                                 <tr>
                                     <td>
                                         <div>${startTime.toLocaleDateString()}</div>
                                         <div style="font-size: 0.85em; color: #6c757d;">
-                                            ${startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} -
-                                            ${endTime ? endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Ongoing'}
+                                            ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} -
+                                            ${endTime ? endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ongoing'}
                                         </div>
                                     </td>
                                     <td><span class="session-id">${session.sessionId.substring(0, 8)}...</span></td>
@@ -281,7 +281,7 @@ export default function ProjectExport({ projectDetail, onExport, onCancel }: Pro
                                     <td class="earnings">$${session.earnings.toFixed(2)}</td>
                                 </tr>
                             `
-                        }).join('')}
+        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -309,70 +309,70 @@ export default function ProjectExport({ projectDetail, onExport, onCancel }: Pro
         <div class="footer">
             <div class="logo">FreelanceCLI</div>
             <div>Generated on ${new Date().toLocaleDateString()}</div>
-            <div style="margin-top: 10px;">This document serves as proof of work completion</div>
+            <div style="margin-top: 10px;">This document doesn't serves as proof of work completion It's only for your reference</div>
         </div>
     </div>
 </body>
 </html>`
-  }
+    }
 
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-surface-container p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="material-symbols-outlined text-primary text-3xl" data-icon="description">description</span>
-          <h3 className="text-xl font-bold">Export Project Report</h3>
+    return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-surface-container p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                    <span className="material-symbols-outlined text-primary text-3xl" data-icon="description">description</span>
+                    <h3 className="text-xl font-bold">Export Project Report</h3>
+                </div>
+                <p className="text-on-surface-variant mb-6">
+                    Generate a detailed HTML report for <strong>{projectDetail.projectName}</strong> with weekly summaries and session details.
+                </p>
+                <div className="bg-surface-container-low p-4 rounded-xl mb-6">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span className="text-on-surface-variant">Total Hours:</span>
+                            <div className="font-bold text-white">{(projectDetail.totalMinutes / 60).toFixed(2)}h</div>
+                        </div>
+                        <div>
+                            <span className="text-on-surface-variant">Sessions:</span>
+                            <div className="font-bold text-white">{projectDetail.sessionCount}</div>
+                        </div>
+                        <div>
+                            <span className="text-on-surface-variant">Earnings:</span>
+                            <div className="font-bold text-primary">${projectDetail.totalEarnings.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <span className="text-on-surface-variant">Rate:</span>
+                            <div className="font-bold text-white">${projectDetail.hourlyRate.toFixed(2)}/h</div>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex gap-3">
+                    <button
+                        onClick={onCancel}
+                        disabled={isExporting}
+                        className="flex-1 px-4 py-3 bg-surface-variant text-on-surface-variant rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="flex-1 px-4 py-3 bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                        {isExporting ? (
+                            <>
+                                <span className="material-symbols-outlined animate-spin" data-icon="refresh">refresh</span>
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined" data-icon="download">download</span>
+                                Export HTML
+                            </>
+                        )}
+                    </button>
+                </div>
+            </div>
         </div>
-        <p className="text-on-surface-variant mb-6">
-          Generate a detailed HTML report for <strong>{projectDetail.projectName}</strong> with weekly summaries and session details.
-        </p>
-        <div className="bg-surface-container-low p-4 rounded-xl mb-6">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-on-surface-variant">Total Hours:</span>
-              <div className="font-bold text-white">{(projectDetail.totalMinutes / 60).toFixed(2)}h</div>
-            </div>
-            <div>
-              <span className="text-on-surface-variant">Sessions:</span>
-              <div className="font-bold text-white">{projectDetail.sessionCount}</div>
-            </div>
-            <div>
-              <span className="text-on-surface-variant">Earnings:</span>
-              <div className="font-bold text-primary">${projectDetail.totalEarnings.toFixed(2)}</div>
-            </div>
-            <div>
-              <span className="text-on-surface-variant">Rate:</span>
-              <div className="font-bold text-white">${projectDetail.hourlyRate.toFixed(2)}/h</div>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            disabled={isExporting}
-            className="flex-1 px-4 py-3 bg-surface-variant text-on-surface-variant rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleExport}
-            disabled={isExporting}
-            className="flex-1 px-4 py-3 bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isExporting ? (
-              <>
-                <span className="material-symbols-outlined animate-spin" data-icon="refresh">refresh</span>
-                Generating...
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined" data-icon="download">download</span>
-                Export HTML
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+    )
 }

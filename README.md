@@ -1,148 +1,269 @@
 # FreelanceCLI
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Java](https://img.shields.io/badge/java-17%2B-brightgreen)
+![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+![Spring Boot](https://img.shields.io/badge/spring%20boot-3.0-brightgreen)
+![React](https://img.shields.io/badge/react-vite-brightgreen)
+
 A **distributed activity logging and analytics system** for freelancers: log work sessions via a CLI (offline-first), sync to a backend, and view reports on a web platform.
+
+## Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [System Design](#system-design)
+- [Technology Stack](#technology-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Usage](#usage)
+- [API Documentation](#api-documentation)
+- [Contributing](#contributing)
+- [Testing](#testing)
+- [License](#license)
+
+## Overview
+
+FreelanceCLI is a comprehensive time tracking and analytics platform designed specifically for freelancers. It consists of three main components:
+
+1. **CLI Application**: A command-line interface for logging work sessions offline-first with local SQLite storage
+2. **Backend Services**: Modular Spring Boot microservices handling authentication, session tracking, and reporting
+3. **Web Frontend**: A React/Vite application for visualizing work data and generating reports
+
+The system enables freelancers to track their time spent on different projects, synchronize data across devices, and gain insights into their productivity and billing.
 
 ## Features
 
-- **CLI**: `freelance login`, `start <project>`, `stop`, `report [project]`, `sync` — local SQLite storage, idempotent sync
-- **Backend**: Modular Spring Boot microservices (Auth, Tracking, Report), API Gateway, PostgreSQL per service, Redis caching
-- **Web**: React app — login, view sessions, report with charts
+### CLI Features
+- **Session Management**: `start`, `stop`, `report` commands for tracking work sessions
+- **Offline-first**: Local SQLite storage with idempotent sync capabilities
+- **Authentication**: Secure login with JWT token management
+- **Synchronization**: Sync local sessions to backend when online
 
-## Architecture
+### Backend Features
+- **Microservices Architecture**: Separate services for Auth, Tracking, and Reporting
+- **API Gateway**: Centralized entry point for all client requests
+- **Database per Service**: PostgreSQL instances for auth and tracking data
+- **Caching**: Redis for report service performance optimization
+- **RESTful APIs**: Well-documented endpoints for all operations
 
-- [Architecture overview](docs/ARCHITECTURE.md)
-- [Database design](docs/DATABASE.md)
-- [API contracts](docs/API.md)
-- [Mermaid diagrams](docs/architecture-diagram.md)
-- [Sample data & examples](docs/sample-data.md)
+### Web Features
+- **User Authentication**: Login/logout with JWT persistence
+- **Session Visualization**: View logged sessions in tabular format
+- **Analytics Dashboard**: Charts and reports for time tracking insights
+- **Project Management**: Organize sessions by project/client
+- **Export Capabilities**: Export reports in various formats
 
-## Prerequisites
 
-- **Java 17**
-- **Node.js 18+** (for web)
-- **PostgreSQL** (2 instances: auth_db, tracking_db) — or use Docker
-- **Redis** (for report cache)
-- **Gradle** (for backend; or use IDE)
+## Technology Stack
 
-## Quick start (local, without Docker)
+### Backend
+- **Language**: Java 17
+- **Framework**: Spring Boot 3.0
+- **Build Tool**: Gradle
+- **Databases**: PostgreSQL (2 instances: auth_db, tracking_db)
+- **Caching**: Redis
+- **API Gateway**: Spring Cloud Gateway
+- **Security**: JWT-based authentication
 
-### 1. Databases and Redis
+### CLI
+- **Language**: Java 17
+- **Framework**: Picocli for command parsing
+- **Database**: SQLite for local storage
+- **Build Tool**: Gradle
 
-- Start PostgreSQL: create databases `auth_db` (port 5432) and `tracking_db` (port 5433), or use two instances.
-- Start Redis on port 6379.
+### Frontend
+- **Framework**: React with Vite
+- **State Management**: React Context/Hooks
+- **Styling**: CSS3 with modern layout techniques
+- **Charts**: Chart.js or similar visualization library
+- **HTTP Client**: Axios for API communication
 
-### 2. Backend
+### DevOps & Infrastructure
+- **Containerization**: Docker and Docker Compose
+- **Version Control**: Git/GitHub
+- **Documentation**: Markdown with Mermaid diagrams
+- **Testing**: JUnit (backend), Jest/Vitest (frontend)
 
-From project root, build and run each service (in separate terminals), or run from your IDE.
+## Getting Started
 
-```bash
-# Option A: If you have Gradle installed
-cd backend
-gradle :auth-service:bootRun      # port 8081
-gradle :tracking-service:bootRun  # port 8082
-gradle :report-service:bootRun    # port 8083
-gradle :api-gateway:bootRun        # port 8080
-```
+### Prerequisites
 
-**Option B:** Open `backend` as a Gradle project in IntelliJ and run each `*Application` main class.  
-Ensure `application.yml` in each service points to your PostgreSQL and (for report-service) Redis.
+Before you begin, ensure you have installed:
+- **Java 17** (OpenJDK or Oracle JDK)
+- **Node.js 18+** (with npm)
+- **PostgreSQL** (two instances or use Docker)
+- **Redis** (for report service caching)
+- **Gradle** (for backend and CLI builds)
+- **Docker & Docker Compose** (optional, for containerized setup)
 
-- **Auth**: `spring.datasource.url=jdbc:postgresql://localhost:5432/auth_db`
-- **Tracking**: `spring.datasource.url=jdbc:postgresql://localhost:5433/tracking_db`
-- **Report**: `spring.data.redis.host=localhost`, `tracking.base-url=http://localhost:8082`
-- **Gateway**: routes to localhost:8081, 8082, 8083 (default).
+### Installation
 
-### 3. CLI
+#### Option 1: Local Setup (without Docker)
 
-```bash
-cd CLI
-./gradlew run --args="login user@example.com --password secret"
-./gradlew run --args="start my-project"
-./gradlew run --args="stop"
-./gradlew run --args="report"
-./gradlew run --args="sync"
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Himansyou/FreelanceCLI.git
+   cd FreelanceCLI
+   ```
 
-Or build and run the installed script:
+2. **Set up databases**
+   - Create PostgreSQL database `auth_db` on port 5432
+   - Create PostgreSQL database `tracking_db` on port 5433
+   - Start Redis server on port 6379
+   - Update `application.yml` files in each service with your database credentials
 
-```bash
-./gradlew installDist
-./build/install/CLI/bin/CLI login ...
-./build/install/CLI/bin/CLI start my-project
-# etc.
-```
+3. **Build and run backend services**
+   ```bash
+   cd backend
+   # Auth service (port 8081)
+   gradle :auth-service:bootRun
+   # Tracking service (port 8082)
+   gradle :tracking-service:bootRun
+   # Report service (port 8083)
+   gradle :report-service:bootRun
+   # API Gateway (port 8080)
+   gradle :api-gateway:bootRun
+   ```
 
-### 4. Web
+4. **Set up CLI**
+   ```bash
+   cd ../CLI
+   ./gradlew installDist
+   ```
 
-```bash
-cd web
-npm install
-npm run dev
-# Open http://localhost:3000 — set VITE_API_URL=http://localhost:8080 if needed
-```
+5. **Set up Web frontend**
+   ```bash
+   cd ../web
+   npm install
+   ```
 
-## Quick start (Docker)
+#### Option 2: Docker Setup
 
-From project root:
+1. **Ensure Docker and Docker Compose are installed**
+2. **From project root:**
+   ```bash
+   docker-compose up -d
+   ```
+   This will start:
+   - PostgreSQL (auth) on port 5432
+   - PostgreSQL (tracking) on port 5433
+   - Redis on port 6379
+   - All backend services (Auth:8081, Tracking:8082, Report:8083, Gateway:8080)
 
-```bash
-docker-compose up -d
-```
+### Usage
 
-This starts:
+#### Using the CLI
 
-- PostgreSQL (auth) on 5432, PostgreSQL (tracking) on 5433
-- Redis on 6379
-- Auth service (8081), Tracking (8082), Report (8083), API Gateway (8080)
+1. **Login**
+   ```bash
+   ./build/install/CLI/bin/CLI login user@example.com --password secret
+   ```
 
-Then run CLI and Web locally as above; use `http://localhost:8080` as API base.
+2. **Start tracking a project**
+   ```bash
+   ./build/install/CLI/bin/CLI start "My Project"
+   ```
 
-## API examples
+3. **Stop tracking**
+   ```bash
+   ./build/install/CLI/bin/CLI stop
+   ```
 
-- **Register**: `POST http://localhost:8080/auth/register`  
-  Body: `{"email":"user@example.com","password":"password123"}`
-- **Login**: `POST http://localhost:8080/auth/login`  
-  Body: `{"email":"user@example.com","password":"password123"}`  
-  Response: `accessToken`, `userId`
-- **Sync sessions**: `POST http://localhost:8080/tracking/sessions/sync`  
-  Header: `Authorization: Bearer <token>`  
-  Body: `{"sessions":[{"id":"uuid","projectId":"x","startTime":"...","endTime":"...","durationMinutes":90,"deviceId":"..."}]}`
-- **Report**: `GET http://localhost:8080/reports/summary?from=2025-02-01&to=2025-02-28`  
-  Header: `Authorization: Bearer <token>`
+4. **View reports**
+   ```bash
+   ./build/install/CLI/bin/CLI report
+   ```
 
-See [docs/API.md](docs/API.md) and [docs/sample-data.md](docs/sample-data.md) for full contracts and sample payloads.
+5. **Sync sessions to backend**
+   ```bash
+   ./build/install/CLI/bin/CLI sync
+   ```
 
-## Postman
+#### Using the Web Application
 
-Import [postman/FreelanceCLI-API.postman_collection.json](postman/FreelanceCLI-API.postman_collection.json). Set `baseUrl` to `http://localhost:8080`. Run **Login** first; the collection script saves `token` for subsequent requests.
+1. **Start the development server**
+   ```bash
+   cd web
+   npm run dev
+   ```
+
+2. **Open your browser** to `http://localhost:3000`
+3. **Set API URL** (if needed): `VITE_API_URL=http://localhost:8080`
+4. **Login** with your credentials
+5. **Navigate** through sessions, projects, and reports
+
+## API Documentation
+
+Detailed API specifications can be found in:
+- [API Contracts](docs/API.md)
+- [Sample Requests/Responses](docs/sample-data.md)
+- **Postman Collection**: Import `postman/FreelanceCLI-API.postman_collection.json`
+
+## Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Commit your changes** (`git commit -m 'Add some amazing feature'`)
+4. **Push to the branch** (`git push origin feature/amazing-feature`)
+5. **Open a Pull Request**
+
+Please ensure your code follows our coding standards and includes appropriate tests.
+
+### Development Guidelines
+- Write meaningful commit messages
+- Add unit tests for new functionality
+- Update documentation as needed
+- Follow existing code style and patterns
 
 ## Testing
 
-- **Backend**: `cd backend && gradle test` (Auth and Tracking have JUnit tests; use H2 in tests).
-- **CLI**: `cd CLI && ./gradlew test`
+### Backend Tests
+```bash
+cd backend
+gradle test
+```
+- Uses H2 in-memory database for testing
+- Auth and Tracking services have JUnit tests
 
-## Project layout
+### CLI Tests
+```bash
+cd CLI
+./gradlew test
+```
+
+### Frontend Tests
+```bash
+cd web
+npm test
+```
+- Uses Jest/Vitest for component and utility testing
+
+## Project Structure
 
 ```
 FreelanceCLI/
-├── CLI/                 # Java CLI (Picocli, SQLite)
-├── backend/
-│   ├── api-gateway/     # Spring Cloud Gateway :8080
-│   ├── auth-service/   # JWT, PostgreSQL auth_db
-│   ├── tracking-service/  # Sessions, PostgreSQL tracking_db
-│   └── report-service/ # Reports, Redis cache
-├── web/                 # React (Vite) frontend
-├── docs/                # Architecture, DB, API, sample data
-├── postman/             # Postman collection
-└── docker-compose.yml
+├── CLI/                    # Java CLI application (Picocli, SQLite)
+├── backend/               # Spring Boot microservices
+│   ├── api-gateway/       # Spring Cloud Gateway (:8080)
+│   ├── auth-service/     # Authentication service (:8081)
+│   ├── tracking-service/  # Session tracking service (:8082)
+│   └── report-service/   # Reporting & analytics service (:8083)
+├── web/                   # React/Vite frontend application
+├── docs/                  # Architecture, database, API documentation
+├── postman/               # Postman API collection
+├── docker-compose.yml     # Docker Compose configuration
+└── README.md              # This file
 ```
-
-## Constraints and tech stack
-
-- **Java 17**, **Spring Boot 3**, **React**, **PostgreSQL**, **Redis**
-- SOLID, readable and commented code; no over-engineering
-- Runnable on a single machine (local or Docker)
 
 ## License
 
-MIT (or as specified in the repo).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Inspired by the need for freelancer-focused time tracking tools
+- Built with modern Java/Spring Boot and React/Vite technologies
+- Special thanks to the open-source community for libraries and frameworks used

@@ -51,11 +51,13 @@ class SessionServiceTest {
         SessionDto dto = new SessionDto();
         dto.setId(sessionId);
         dto.setProjectId("project-a");
-        dto.setStartTime(Instant.now().minusSeconds(1800));
-        dto.setEndTime(Instant.now());
+        Instant endTime = Instant.now(); // Fixed end time
+        dto.setEndTime(endTime);
+        dto.setStartTime(endTime.minusSeconds(1800)); // 30 minutes = 1800 seconds
         dto.setDurationMinutes(30);
         sessionService.syncSessions(USER_ID, List.of(dto));
         dto.setDurationMinutes(35);
+        dto.setStartTime(endTime.minusSeconds(2100)); // 35 minutes = 2100 seconds
         sessionService.syncSessions(USER_ID, List.of(dto));
 
         var list = sessionService.listSessions(USER_ID, null, null, null);
