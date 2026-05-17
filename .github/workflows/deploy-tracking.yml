@@ -43,5 +43,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Trigger Render Deployment via Webhook
-        run: echo "Skipping webhook ping. Image built successfully!"
+      - name: Trigger Render Deployment via Deploy Hooks
+        run: |
+          echo "Pinging Render to pull fresh images..."
+          curl -X POST "${{ secrets.RENDER_TRACKING_HOOK }}"

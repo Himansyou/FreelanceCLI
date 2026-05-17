@@ -44,5 +44,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}    # 💡 Fixed: steps instead of id
           labels: ${{ steps.meta.outputs.labels }}  # 💡 Fixed: steps instead of id
 
-      - name: Trigger Render Deployment via Webhook
-        run: echo "Skipping webhook ping. Image built successfully!"
+      - name: Trigger Render Deployment via Deploy Hooks
+        run: |
+          echo "Pinging Render to pull fresh images..."
+          curl -X POST "${{ secrets.RENDER_GATEWAY_HOOK }}"
