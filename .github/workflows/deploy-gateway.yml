@@ -37,12 +37,12 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./api-gateway # 💡 Root execution folder for Maven/Docker build
-          file: ./auth-service/Dockerfile
+          context: ./backend/api-gateway # 💡 Root execution folder for Maven/Docker build
+          file: .backend/api-gateway/Dockerfile
           push: true
           tags: ${{ id.meta.outputs.tags }}
           labels: ${{ id.meta.outputs.labels }}
 
       - name: Trigger Render Deployment via Webhook
-        run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+        # 💡 Safely bypass this until you create the app on Render and get the real hook
+        run: echo "Skipping webhook ping. Image built successfully!"

@@ -44,5 +44,5 @@ jobs:
           labels: ${{ id.meta.outputs.labels }}
 
       - name: Trigger Render Deployment via Webhook
-        run: |
-          curl -X POST "${{ secrets.RENDER_REPORT_DEPLOY_HOOK }}" # 💡 Set this secret in GitHub repository settings
+        # 💡 Safely bypass this until you create the app on Render and get the real hook
+        run: echo "Skipping webhook ping. Image built successfully!"
