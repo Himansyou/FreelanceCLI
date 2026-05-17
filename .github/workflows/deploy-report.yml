@@ -37,7 +37,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./report-service
+          context: ./backend
           file: ./backend/report-service/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}    # 💡 Fixed: steps instead of id

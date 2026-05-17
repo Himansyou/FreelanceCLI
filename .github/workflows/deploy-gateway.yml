@@ -37,7 +37,8 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./api-gateway             # 💡 Fixed: Added backend/ folder path
+          context: ./backend
+          # 💡 Fixed: Added backend/ folder path
           file: ./backend/api-gateway/Dockerfile     # 💡 Fixed: Added backend/ folder path
           push: true
           tags: ${{ steps.meta.outputs.tags }}    # 💡 Fixed: steps instead of id
