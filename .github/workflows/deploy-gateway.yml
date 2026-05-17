@@ -1,11 +1,11 @@
-name: Deploy Auth Service to Render
+name: Deploy Gateway Service to Render
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'backend/api-gateway/**' # 💡 Pipeline only runs when files inside this directory change
+      - 'backend/api-gateway/**' # 💡 Runs only when files inside backend/api-gateway change
 
 jobs:
   build-and-deploy:
@@ -13,7 +13,7 @@ jobs:
 
     permissions:
       contents: read
-      packages: write # Required to publish images to GHCR
+      packages: write
 
     steps:
       - name: Checkout Code
@@ -24,25 +24,24 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # Automatically handled by GitHub Actions
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract Metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/api-gateway # 💡 Generates lowercase image path
+          images: ghcr.io/${{ github.repository }}/api-gateway
           tags: |
             type=raw,value=latest
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/api-gateway # 💡 Root execution folder for Maven/Docker build
-          file: .backend/api-gateway/Dockerfile
+          context: ./backend/api-gateway             # 💡 Fixed: Added backend/ folder path
+          file: ./backend/api-gateway/Dockerfile     # 💡 Fixed: Added backend/ folder path
           push: true
-          tags: ${{ id.meta.outputs.tags }}
-          labels: ${{ id.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}    # 💡 Fixed: steps instead of id
+          labels: ${{ steps.meta.outputs.labels }}  # 💡 Fixed: steps instead of id
 
       - name: Trigger Render Deployment via Webhook
-        # 💡 Safely bypass this until you create the app on Render and get the real hook
         run: echo "Skipping webhook ping. Image built successfully!"
