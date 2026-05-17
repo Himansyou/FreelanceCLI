@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+      routes:
+        - id: auth
+          uri: ${GATEWAY_AUTH_URI}
+          predicates:
+            - Path=/auth/**
+
+        - id: tracking
+          uri: ${GATEWAY_TRACKING_URI}
+          predicates:
+            - Path=/tracking/**
+
+        - id: project-settings
+          uri: ${GATEWAY_TRACKING_URI}
+          predicates:
+            - Path=/project-settings/**
+
+        - id: reports
+          uri: ${GATEWAY_REPORTS_URI}
+          predicates:
+            - Path=/reports/**

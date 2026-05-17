@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tracking_db
+    username: ${TRACKING_DB_USER:postgres}
+    password: ${TRACKING_DB_PASS:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: update

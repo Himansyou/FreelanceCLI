@@ -1,0 +1,3 @@
+GATEWAY_AUTH_URI: http://auth-service:8081
+GATEWAY_TRACKING_URI: http://tracking-service:8082
+GATEWAY_REPORTS_URI: http://report-service:8083

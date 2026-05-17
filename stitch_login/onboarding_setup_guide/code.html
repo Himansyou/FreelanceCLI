@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#0eeafd",
+                    "surface-bright": "#2c2c2c",
+                    "inverse-primary": "#006f16",
+                    "inverse-surface": "#f9f9f9",
+                    "on-primary-container": "#005a10",
+                    "secondary-dim": "#7aeb9d",
+                    "tertiary-dim": "#00dbec",
+                    "error": "#ff7351",
+                    "secondary-fixed-dim": "#7aeb9d",
+                    "on-primary-fixed": "#00440a",
+                    "surface-container": "#191919",
+                    "primary-fixed": "#00fc40",
+                    "on-secondary-container": "#e3ffe5",
+                    "on-tertiary-fixed": "#003d42",
+                    "on-error-container": "#ffd2c8",
+                    "on-secondary-fixed": "#004a24",
+                    "primary-container": "#00fc40",
+                    "error-container": "#b92902",
+                    "on-primary": "#006413",
+                    "surface": "#0e0e0e",
+                    "background": "#0e0e0e",
+                    "surface-container-low": "#131313",
+                    "on-surface-variant": "#ababab",
+                    "secondary-fixed": "#89faaa",
+                    "on-secondary-fixed-variant": "#006a36",
+                    "outline-variant": "#484848",
+                    "surface-tint": "#9cff93",
+                    "primary-dim": "#00ec3b",
+                    "secondary": "#89faaa",
+                    "on-error": "#450900",
+                    "tertiary": "#8af2ff",
+                    "surface-container-high": "#1f1f1f",
+                    "secondary-container": "#006d38",
+                    "outline": "#757575",
+                    "surface-container-lowest": "#000000",
+                    "on-tertiary-fixed-variant": "#005c64",
+                    "on-secondary": "#005f30",
+                    "inverse-on-surface": "#555555",
+                    "surface-container-highest": "#262626",
+                    "surface-variant": "#262626",
+                    "tertiary-fixed-dim": "#00dbec",
+                    "primary-fixed-dim": "#00ec3b",
+                    "on-tertiary-container": "#005159",
+                    "on-background": "#ffffff",
+                    "tertiary-fixed": "#0eeafd",
+                    "on-surface": "#ffffff",
+                    "primary": "#9cff93",
+                    "on-tertiary": "#005b63",
+                    "surface-dim": "#0e0e0e",
+                    "on-primary-fixed-variant": "#006513",
+                    "error-dim": "#d53d18"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px",
+                    "32": "2rem"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "display": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0e0e0e;
+        }
+        .obsidian-glass {
+            background: linear-gradient(135deg, rgba(25, 25, 25, 0.8) 0%, rgba(14, 14, 14, 0.9) 100%);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="text-on-surface antialiased">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-[#484848]/15 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)]">
+<div class="flex justify-between items-center w-full px-6 py-4 max-w-screen-2xl mx-auto font-['Inter'] antialiased tracking-tight">
+<div class="text-xl font-black tracking-tighter text-white">OBSIDIAN_CLI</div>
+<div class="hidden md:flex items-center space-x-8">
+<a class="text-neutral-400 font-medium hover:text-white transition-colors" href="#">Docs</a>
+<a class="text-neutral-400 font-medium hover:text-white transition-colors" href="#">Changelog</a>
+<a class="text-neutral-400 font-medium hover:text-white transition-colors" href="#">Showcase</a>
+</div>
+<div class="flex items-center space-x-4">
+<button class="text-neutral-400 font-medium hover:text-white transition-colors px-4 py-2 cursor-pointer">Login</button>
+<button class="bg-primary-container text-on-primary px-6 py-2 rounded-xl font-bold active:scale-95 transition-transform hover:opacity-90">Get Started</button>
+</div>
+</div>
+</nav>
+<!-- Main Content: Onboarding Flow -->
+<main class="min-h-screen pt-32 pb-24 px-6 max-w-5xl mx-auto flex flex-col items-center">
+<!-- Header & Stepper -->
+<div class="text-center mb-16">
+<h1 class="text-5xl md:text-6xl font-black tracking-tighter mb-4">Welcome to <span class="text-primary">FreelanceCLI</span></h1>
+<p class="text-on-surface-variant text-lg max-w-xl mx-auto">Let's get you set up with the terminal-grade precision you deserve.</p>
+</div>
+<!-- Progress Stepper -->
+<div class="w-full max-w-3xl flex justify-between items-center mb-16 px-4 relative">
+<div class="absolute top-1/2 left-0 w-full h-[2px] bg-surface-container-highest -z-10 -translate-y-1/2"></div>
+<!-- Active Progress Line -->
+<div class="absolute top-1/2 left-0 w-[80%] h-[2px] bg-primary -z-10 -translate-y-1/2"></div>
+<!-- Step Indicators -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm">1</div>
+<span class="text-[10px] uppercase tracking-widest font-bold text-primary">Install</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm">2</div>
+<span class="text-[10px] uppercase tracking-widest font-bold text-primary">Register</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm">3</div>
+<span class="text-[10px] uppercase tracking-widest font-bold text-primary">Login</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm">4</div>
+<span class="text-[10px] uppercase tracking-widest font-bold text-primary">Track</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant text-on-surface-variant flex items-center justify-center font-bold text-sm">5</div>
+<span class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">View</span>
+</div>
+</div>
+<!-- Bento Grid Onboarding Cards -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 w-full auto-rows-min">
+<!-- Step 1: Install -->
+<div class="md:col-span-7 obsidian-glass p-10 rounded-32 flex flex-col justify-between min-h-[320px] group transition-all duration-300 hover:ring-1 hover:ring-primary/20">
+<div>
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">download</span>
+<h2 class="text-2xl font-bold tracking-tight">Step 1: Install CLI</h2>
+</div>
+<p class="text-on-surface-variant mb-8 leading-relaxed">Prepare your environment by installing the FreelanceCLI globally via Node Package Manager.</p>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between font-mono text-primary text-sm group-hover:bg-black transition-colors border border-outline-variant/10">
+<code>npm install -g freelancecli</code>
+<button class="p-2 hover:bg-surface-container rounded-lg transition-colors group/btn">
+<span class="material-symbols-outlined text-on-surface-variant group-hover/btn:text-primary">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Step 2: Register -->
+<div class="md:col-span-5 bg-surface-container p-10 rounded-32 flex flex-col items-center justify-center text-center gap-6 min-h-[320px] hover:bg-surface-container-high transition-colors">
+<div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-primary text-3xl">person_add</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold tracking-tight mb-2">Step 2: Register</h2>
+<p class="text-on-surface-variant text-sm mb-6 px-4">Create your secure architectural profile to sync sessions across devices.</p>
+</div>
+<button class="w-full bg-white text-black font-bold py-4 rounded-xl active:scale-95 transition-transform">Register here</button>
+</div>
+<!-- Step 3: CLI Login -->
+<div class="md:col-span-5 obsidian-glass p-10 rounded-32 flex flex-col min-h-[320px] hover:ring-1 hover:ring-primary/20 transition-all">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary">key</span>
+<h2 class="text-2xl font-bold tracking-tight">Step 3: CLI Login</h2>
+</div>
+<p class="text-on-surface-variant text-sm mb-8">Authenticate your terminal session using your newly created credentials.</p>
+<div class="mt-auto bg-surface-container-lowest p-5 rounded-xl font-mono text-primary-dim text-sm border border-outline-variant/10">
+<code>freelancecli login</code>
+</div>
+</div>
+<!-- Step 4: Track Work -->
+<div class="md:col-span-7 bg-surface-container p-10 rounded-32 flex flex-col justify-between min-h-[320px] hover:bg-surface-container-high transition-all">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary">play_circle</span>
+<h2 class="text-2xl font-bold tracking-tight">Step 4: Track Work</h2>
+</div>
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-6 mb-4">
+<div class="flex flex-col gap-3 font-mono text-xs md:text-sm">
+<div class="flex gap-2">
+<span class="text-neutral-600">$</span>
+<code class="text-on-surface">freelancecli start-session --project <span class="text-primary">ProjectName</span></code>
+</div>
+<div class="text-neutral-500 mt-2">
+                            [SYSTEM] Session initialized for ProjectName.<br/>
+                            [SYSTEM] Recording telemetry...
+                        </div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-9xl">schedule</span>
+</div>
+</div>
+<p class="text-on-surface-variant text-sm italic">Pro-tip: Use tags to categorize different task types within a project.</p>
+</div>
+<!-- Step 5: View Analytics & Dashboard -->
+<div class="md:col-span-12 obsidian-glass p-10 rounded-32 flex flex-col md:flex-row gap-12 min-h-[450px] overflow-hidden group">
+<div class="flex-1 flex flex-col justify-center">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">insights</span>
+<h2 class="text-3xl font-black tracking-tight">Step 5: View Analytics</h2>
+</div>
+<p class="text-on-surface-variant mb-8 leading-relaxed max-w-md">The final command unlocks your editorial dashboard. Gain insights into productivity peaks and project health with a single line of code.</p>
+<div class="bg-surface-container-lowest p-5 rounded-xl font-mono text-primary text-lg mb-8 inline-block w-fit border border-outline-variant/10">
+<code>freelancecli report</code>
+</div>
+<button class="bg-primary-container text-on-primary font-bold py-4 px-8 rounded-xl w-fit active:scale-95 transition-transform flex items-center gap-2 group-hover:shadow-[0_0_20px_rgba(156,255,147,0.3)]">
+                        Explore Dashboard
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="flex-1 relative">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent rounded-2xl"></div>
+<div class="w-full h-full bg-surface-container-high rounded-2xl border border-outline-variant/20 p-6 flex flex-col gap-6 overflow-hidden">
+<div class="flex justify-between items-center">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-error/40"></div>
+<div class="w-3 h-3 rounded-full bg-primary/40"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary/40"></div>
+</div>
+<div class="h-4 w-24 bg-surface-container rounded-full"></div>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<div class="h-20 bg-surface-container rounded-xl flex items-end p-2 gap-1">
+<div class="w-full bg-primary/30 h-1/2 rounded-sm"></div>
+<div class="w-full bg-primary h-4/5 rounded-sm"></div>
+<div class="w-full bg-primary/60 h-2/3 rounded-sm"></div>
+</div>
+<div class="h-20 bg-surface-container rounded-xl flex items-center justify-center">
+<span class="text-primary font-black text-xl">84%</span>
+</div>
+<div class="h-20 bg-surface-container rounded-xl flex flex-col p-3 gap-2">
+<div class="h-1 w-full bg-primary rounded-full"></div>
+<div class="h-1 w-2/3 bg-on-surface-variant/20 rounded-full"></div>
+</div>
+</div>
+<div class="flex-1 bg-surface-container rounded-xl p-4">
+<div class="flex flex-col gap-3">
+<div class="h-2 w-full bg-on-surface-variant/10 rounded-full"></div>
+<div class="h-2 w-4/5 bg-on-surface-variant/10 rounded-full"></div>
+<div class="h-2 w-3/4 bg-on-surface-variant/10 rounded-full"></div>
+<div class="h-2 w-full bg-on-surface-variant/10 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Final CTA -->
+<div class="mt-24 text-center">
+<p class="text-on-surface-variant mb-6 uppercase tracking-widest text-[10px] font-bold">Ready to transcend?</p>
+<button class="bg-surface-container-high border border-outline-variant/40 px-12 py-5 rounded-2xl text-xl font-bold hover:bg-primary hover:text-on-primary transition-all duration-300">
+                Launch My Console
+            </button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-[#0e0e0e] w-full py-12 border-t border-[#484848]/15">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto space-y-4 md:space-y-0 text-sm font-['Inter'] tracking-wide uppercase">
+<div class="text-neutral-500">© 2024 Obsidian Glass Architecture. Terminal-grade precision.</div>
+<div class="flex space-x-8">
+<a class="text-neutral-500 hover:text-[#9CFF93] transition-colors cursor-pointer" href="#">GitHub</a>
+<a class="text-neutral-500 hover:text-[#9CFF93] transition-colors cursor-pointer" href="#">Documentation</a>
+<a class="text-neutral-500 hover:text-[#9CFF93] transition-colors cursor-pointer" href="#">Privacy</a>
+<a class="text-neutral-500 hover:text-[#9CFF93] transition-colors cursor-pointer" href="#">Discord</a>
+</div>
+</div>
+</footer>
+</body></html>

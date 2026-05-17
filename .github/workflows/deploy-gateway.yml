@@ -1,0 +1,48 @@
+name: Deploy Auth Service to Render
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/api-gateway/**' # 💡 Pipeline only runs when files inside this directory change
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write # Required to publish images to GHCR
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Automatically handled by GitHub Actions
+
+      - name: Extract Metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/api-gateway # 💡 Generates lowercase image path
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api-gateway # 💡 Root execution folder for Maven/Docker build
+          file: ./auth-service/Dockerfile
+          push: true
+          tags: ${{ id.meta.outputs.tags }}
+          labels: ${{ id.meta.outputs.labels }}
+
+      - name: Trigger Render Deployment via Webhook
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"

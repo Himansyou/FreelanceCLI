@@ -1,0 +1,48 @@
+name: Deploy Tracking Service to Render
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/tracking-service/**' # 💡 Runs only when files inside backend/tracking-service change
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/tracking-service # 💡 Pushes as tracking-service package
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/tracking-service # 💡 Shifts context down to your nested backend folder
+          file: ./backend/tracking-service/Dockerfile
+          push: true
+          tags: ${{ id.meta.outputs.tags }}
+          labels: ${{ id.meta.outputs.labels }}
+
+      - name: Trigger Render Deployment via Webhook
+        run: |
+          curl -X POST "${{ secrets.RENDER_TRACKING_DEPLOY_HOOK }}" # 💡 Set this secret in GitHub repository settings
