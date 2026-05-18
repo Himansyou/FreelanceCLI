@@ -1,4 +1,4 @@
-package org.freelance.gateway;
+package org.freelance.report.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
