@@ -40,7 +40,7 @@ public class CorsConfig {
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/actuator/**", config);
+        source.registerCorsConfiguration("/**", config);
         return new CorsWebFilter(source);
     }
 }
