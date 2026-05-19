@@ -20,6 +20,18 @@ spring:
           starttls:
             enable: true
     from: ${MAIL_FROM:noreply@freelance.com}
+  boot:
+    admin:
+      client:
+        url: http://localhost:8084  # Admin server URL
+  actuator:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,prometheus
+    endpoint:
+      health:
+        show-details: always
 
 jwt:
   secret: ${JWT_SECRET:dev-secret}
