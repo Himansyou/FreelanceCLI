@@ -8,6 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/backend" />
+            <option value="$PROJECT_DIR$/backend/admin-service" />
             <option value="$PROJECT_DIR$/backend/api-gateway" />
             <option value="$PROJECT_DIR$/backend/auth-service" />
             <option value="$PROJECT_DIR$/backend/report-service" />

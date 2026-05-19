@@ -32,6 +32,7 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/register", "/auth/login", "/auth/register/initiate", "/auth/register/verify").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/auth/**").authenticated()
                 .anyRequest().denyAll()
             )

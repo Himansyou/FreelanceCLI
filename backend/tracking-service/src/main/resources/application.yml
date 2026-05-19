@@ -4,7 +4,18 @@ server:
 spring:
   application:
     name: tracking-service
-
+  boot:
+    admin:
+      client:
+        url: http://localhost:8084  # Admin server URL
+  actuator:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,prometheus
+    endpoint:
+      health:
+        show-details: always
 
 
 jwt:
