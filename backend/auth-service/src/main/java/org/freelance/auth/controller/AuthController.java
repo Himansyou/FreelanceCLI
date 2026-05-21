@@ -42,7 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/register/verify")
-    public ResponseEntity<LoginResponse> verifyRegistration(@Valid @RequestBody RegisterVerifyRequest request) {
+    public ResponseEntity<LoginResponse> verifyRegistration(@RequestBody RegisterVerifyRequest request) {
         LoginResponse response = authService.verifyRegistration(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

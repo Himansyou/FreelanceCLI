@@ -16,7 +16,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.springframework.boot:spring-boot-starter-mail")
+    // Mail removed — using Resend REST API (no SMTP ports needed)
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.postgresql:postgresql")
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
