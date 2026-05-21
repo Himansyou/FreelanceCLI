@@ -6,21 +6,32 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Request body for verifying registration with OTP.
+ * Request body for verifying registration with OTP or token.
+ * Supports both: click-to-verify link (token) and manual OTP code (email+otp).
  */
 public class RegisterVerifyRequest {
 
-    @NotBlank(message = "Email is required")
     @Email
     private String email;
 
-    @NotBlank(message = "OTP is required")
     @Size(min = 6, max = 6, message = "OTP must be 6 digits")
     @Pattern(regexp = "\\d{6}", message = "OTP must be 6 digits")
     private String otp;
+
+    private String token;
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getOtp() { return otp; }
     public void setOtp(String otp) { this.otp = otp; }
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+
+    public boolean isTokenVerification() {
+        return token != null && !token.isBlank();
+    }
+
+    public boolean isOtpVerification() {
+        return email != null && !email.isBlank() && otp != null && !otp.isBlank();
+    }
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
-import { login as apiLogin, initiateRegistration, verifyRegistration } from '../api'
+import { initiateRegistration, verifyRegistration } from '../api'
 
 export default function Register() {
   const [step, setStep] = useState(1)
@@ -14,6 +14,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showOtpFallback, setShowOtpFallback] = useState(false)
 
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -48,7 +49,19 @@ export default function Register() {
       await initiateRegistration(email, username, password)
       setStep(3)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to send OTP')
+      setError(err instanceof Error ? err.message : 'Failed to send verification email')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleResend() {
+    setError('')
+    setLoading(true)
+    try {
+      await initiateRegistration(email, username, password)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to resend')
     } finally {
       setLoading(false)
     }
@@ -119,10 +132,10 @@ export default function Register() {
                 <span className="text-[10px] font-mono uppercase tracking-widest text-secondary">Step {step} of 3</span>
               </div>
               <h1 className="text-3xl font-black tracking-tighter text-on-surface mb-1">
-                {step === 1 ? 'Create account' : step === 2 ? 'Almost there!' : 'Verify your email'}
+                {step === 1 ? 'Create account' : step === 2 ? 'Almost there!' : 'Check your email'}
               </h1>
               <p className="text-on-surface-variant text-sm">
-                {step === 1 ? 'Enter your email to get started' : step === 2 ? 'Set up your username and password' : `Enter the 6-digit code sent to ${email}`}
+                {step === 1 ? 'Enter your email to get started' : step === 2 ? 'Set up your username and password' : `We sent a verification link to ${email}`}
               </p>
             </div>
 
@@ -134,7 +147,7 @@ export default function Register() {
             </div>
 
             {/* form */}
-            <form className="space-y-5" onSubmit={step === 1 ? handleEmailSubmit : step === 2 ? handleFinalSubmit : handleOtpSubmit}>
+            <div className="space-y-5">
               {error && (
                 <div className="flex items-center gap-2 text-error bg-error/10 border border-error/20 p-3 rounded-2xl text-sm">
                   <span className="material-symbols-outlined text-base">error</span>
@@ -144,25 +157,37 @@ export default function Register() {
 
               {step === 1 ? (
                 /* Step 1: Email only */
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono uppercase tracking-[0.12em] text-on-surface-variant ml-1">Email</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 text-[18px] pointer-events-none">mail</span>
-                    <input
-                      className="w-full bg-[#1a1a1a] border border-gray-600 rounded-2xl py-3.5 pl-11 pr-5 text-gray-200 placeholder:!text-[#111] focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm"
-                      placeholder="Enter your email"
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      disabled={loading}
-                      required
-                      autoFocus
-                    />
+                <form className="space-y-5" onSubmit={handleEmailSubmit}>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-[0.12em] text-on-surface-variant ml-1">Email</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 text-[18px] pointer-events-none">mail</span>
+                      <input
+                        className="w-full bg-[#1a1a1a] border border-gray-600 rounded-2xl py-3.5 pl-11 pr-5 text-gray-200 placeholder:!text-[#111] focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm"
+                        placeholder="Enter your email"
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        disabled={loading}
+                        required
+                        autoFocus
+                      />
+                    </div>
                   </div>
-                </div>
+                  <div className="pt-2">
+                    <button
+                      className="w-full bg-secondary-container text-on-secondary font-black py-4 rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base shadow-[0_0_24px_rgba(137,250,170,0.2)] disabled:opacity-60 disabled:cursor-not-allowed"
+                      type="submit"
+                      disabled={loading}
+                    >
+                      Continue
+                      <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                    </button>
+                  </div>
+                </form>
               ) : step === 2 ? (
                 /* Step 2: Username and password */
-                <>
+                <form className="space-y-5" onSubmit={handleFinalSubmit}>
                   {/* username */}
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-mono uppercase tracking-[0.12em] text-on-surface-variant ml-1">Username</label>
@@ -230,79 +255,147 @@ export default function Register() {
                       </button>
                     </div>
                   </div>
-                </>
-              ) : (
-                /* Step 3: OTP verification */
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono uppercase tracking-[0.12em] text-on-surface-variant ml-1">Verification Code</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 text-[18px] pointer-events-none">verified</span>
-                    <input
-                      className="w-full bg-[#1a1a1a] border border-gray-600 rounded-2xl py-3.5 pl-11 pr-5 text-gray-200 placeholder:!text-[#111] focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm text-center tracking-[0.5em] font-mono"
-                      placeholder="000000"
-                      type="text"
-                      value={otp}
-                      onChange={e => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 6)
-                        setOtp(value)
-                      }}
+
+                  <div className="pt-2">
+                    <button
+                      className="w-full bg-secondary-container text-on-secondary font-black py-4 rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base shadow-[0_0_24px_rgba(137,250,170,0.2)] disabled:opacity-60 disabled:cursor-not-allowed"
+                      type="submit"
                       disabled={loading}
-                      required
-                      autoFocus
-                      maxLength={6}
-                    />
+                    >
+                      {loading ? (
+                        <>
+                          <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                          Sending verification email…
+                        </>
+                      ) : (
+                        <>
+                          Send verification email
+                          <span className="material-symbols-outlined text-sm">send</span>
+                        </>
+                      )}
+                    </button>
                   </div>
-                  <p className="text-xs text-on-surface-variant/60 text-center">
-                    Code expires in 20 minutes. Check your spam folder if you don't see it.
-                  </p>
-                </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="w-full text-center text-sm text-on-surface-variant hover:text-on-surface transition-colors"
+                    disabled={loading}
+                  >
+                    ← Back
+                  </button>
+                </form>
+              ) : (
+                /* Step 3: Check your email — link verification + OTP fallback */
+                <>
+                  <div className="text-center py-4">
+                    <span className="material-symbols-outlined text-5xl text-secondary mb-4 block">mark_email_read</span>
+                    <p className="text-on-surface-variant text-sm mb-1">
+                      Click the verification link in your email to complete registration.
+                    </p>
+                    <p className="text-on-surface-variant/60 text-xs">
+                      Link expires in 20 minutes. Check spam if you don't see it.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={loading}
+                    className="w-full bg-secondary-container text-on-secondary font-black py-4 rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base shadow-[0_0_24px_rgba(137,250,170,0.2)] disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                        Resending…
+                      </>
+                    ) : (
+                      <>
+                        Resend verification email
+                        <span className="material-symbols-outlined text-sm">refresh</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* OTP fallback toggle */}
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowOtpFallback(v => !v)}
+                      className="text-xs text-on-surface-variant/60 hover:text-on-surface-variant transition-colors"
+                    >
+                      {showOtpFallback ? 'Hide' : 'Prefer entering a code manually?'}
+                    </button>
+                  </div>
+
+                  {showOtpFallback && (
+                    <form className="space-y-5" onSubmit={handleOtpSubmit}>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-mono uppercase tracking-[0.12em] text-on-surface-variant ml-1">Verification Code</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-500 text-[18px] pointer-events-none">verified</span>
+                          <input
+                            className="w-full bg-[#1a1a1a] border border-gray-600 rounded-2xl py-3.5 pl-11 pr-5 text-gray-200 placeholder:!text-[#111] focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all outline-none text-sm text-center tracking-[0.5em] font-mono"
+                            placeholder="000000"
+                            type="text"
+                            value={otp}
+                            onChange={e => {
+                              const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                              setOtp(value)
+                            }}
+                            disabled={loading}
+                            required
+                            autoFocus
+                            maxLength={6}
+                          />
+                        </div>
+                        <p className="text-xs text-on-surface-variant/60 text-center">
+                          The 6-digit code from your email
+                        </p>
+                      </div>
+                      <button
+                        className="w-full bg-primary text-on-primary font-black py-4 rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+                        type="submit"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                            Verifying…
+                          </>
+                        ) : (
+                          <>
+                            Verify with code
+                            <span className="material-symbols-outlined text-sm">check</span>
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="w-full text-center text-sm text-on-surface-variant hover:text-on-surface transition-colors"
+                    disabled={loading}
+                  >
+                    ← Back
+                  </button>
+                </>
               )}
 
-              {/* submit */}
-              <div className="pt-2">
-                <button
-                  className="w-full bg-secondary-container text-on-secondary font-black py-4 rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base shadow-[0_0_24px_rgba(137,250,170,0.2)] disabled:opacity-60 disabled:cursor-not-allowed"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                      {step === 1 ? 'Processing…' : step === 2 ? 'Sending OTP…' : 'Verifying…'}
-                    </>
-                  ) : (
-                    <>
-                      {step === 1 ? 'Continue' : step === 2 ? 'Send verification code' : 'Verify & create account'}
-                      <span className="material-symbols-outlined text-sm">{step === 1 ? 'arrow_forward' : step === 2 ? 'send' : 'check'}</span>
-                    </>
-                  )}
-                </button>
+              {/* divider */}
+              <div className="flex items-center gap-3 my-6">
+                <div className="flex-1 h-px bg-outline-variant/30" />
+                <span className="text-xs text-on-surface-variant/40 font-mono">or</span>
+                <div className="flex-1 h-px bg-outline-variant/30" />
               </div>
 
-              {/* back button for step 2 and 3 */}
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setStep(step - 1)}
-                  className="w-full text-center text-sm text-on-surface-variant hover:text-on-surface transition-colors"
-                  disabled={loading}
-                >
-                  ← Back
-                </button>
-              )}
-            </form>
-
-            {/* divider */}
-            <div className="flex items-center gap-3 my-6">
-              <div className="flex-1 h-px bg-outline-variant/30" />
-              <span className="text-xs text-on-surface-variant/40 font-mono">or</span>
-              <div className="flex-1 h-px bg-outline-variant/30" />
-            </div>
-
-            {/* footer links */}
-            <div className="text-center text-sm text-on-surface-variant space-y-2">
-              <p>Already have an account? <Link className="text-secondary font-semibold hover:underline" to="/login">Log in</Link></p>
-              <Link to="/" className="text-xs text-on-surface-variant/50 hover:text-on-surface-variant transition-colors block">← Back to homepage</Link>
+              {/* footer links */}
+              <div className="text-center text-sm text-on-surface-variant space-y-2">
+                <p>Already have an account? <Link className="text-secondary font-semibold hover:underline" to="/login">Log in</Link></p>
+                <Link to="/" className="text-xs text-on-surface-variant/50 hover:text-on-surface-variant transition-colors block">← Back to homepage</Link>
+              </div>
             </div>
           </div>
         </div>

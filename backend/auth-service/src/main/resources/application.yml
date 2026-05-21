@@ -8,22 +8,10 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-  mail:
-    host: ${SMTP_HOST:smtp.gmail.com}
-    port: ${SMTP_PORT:587}
-    username: ${SMTP_USERNAME}
-    password: ${SMTP_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-    from: ${MAIL_FROM:noreply@freelance.com}
   boot:
     admin:
       client:
-        url: http://localhost:8084  # Admin server URL
+        url: http://localhost:8084 # Admin server URL
   actuator:
     endpoints:
       web:
@@ -36,3 +24,8 @@ spring:
 jwt:
   secret: ${JWT_SECRET:dev-secret}
   expiration-ms: 259200000
+
+resend:
+  api-key: ${RESEND_API_KEY}
+  from: ${RESEND_FROM:noreply@freelance.com}
+  verify-base-url: ${RESEND_VERIFY_BASE_URL:http://localhost:5173/verify}

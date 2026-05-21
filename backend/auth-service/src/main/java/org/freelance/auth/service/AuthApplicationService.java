@@ -63,15 +63,23 @@ public class AuthApplicationService {
 
     @Transactional
     public LoginResponse verifyRegistration(RegisterVerifyRequest request) {
-        String email = request.getEmail().trim().toLowerCase();
-        OtpService.OtpData otpData = otpService.validateOtp(email, request.getOtp());
+        OtpService.OtpData otpData;
 
-        if (userRepository.existsByEmail(email)) {
+        if (request.isTokenVerification()) {
+            otpData = otpService.validateToken(request.getToken());
+        } else if (request.isOtpVerification()) {
+            String email = request.getEmail().trim().toLowerCase();
+            otpData = otpService.validateOtp(email, request.getOtp());
+        } else {
+            throw new IllegalArgumentException("Provide either a verification token or email+OTP");
+        }
+
+        if (userRepository.existsByEmail(otpData.getEmail())) {
             throw new IllegalArgumentException("Email already registered");
         }
 
         User user = new User();
-        user.setEmail(email);
+        user.setEmail(otpData.getEmail());
         user.setUsername(otpData.getUsername());
         user.setPasswordHash(otpData.getPassword());
         user = userRepository.save(user);

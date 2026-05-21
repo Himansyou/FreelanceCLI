@@ -10,8 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.SimpleMailMessage;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +28,7 @@ class OtpServiceTest {
     private ValueOperations<String, Object> valueOperations;
 
     @Mock
-    private JavaMailSender mailSender;
+    private ResendEmailService emailService;
 
     @InjectMocks
     private OtpService otpService;
@@ -46,139 +44,109 @@ class OtpServiceTest {
 
     @Test
     void testGenerateAndSendOtp_Success() {
-        // Arrange
         when(valueOperations.increment(anyString())).thenReturn(1L);
 
-        // Act
-        String otp = otpService.generateAndSendOtp(TEST_EMAIL, TEST_USERNAME, TEST_PASSWORD_HASH);
+        String token = otpService.generateAndSendOtp(TEST_EMAIL, TEST_USERNAME, TEST_PASSWORD_HASH);
 
-        // Assert
-        assertNotNull(otp);
-        assertEquals(6, otp.length());
-        assertTrue(otp.matches("\\d+")); // Should be all digits
+        assertNotNull(token);
+        assertTrue(token.matches("[0-9a-f-]{36}")); // UUID format
 
-        // Verify OTP was stored in Redis
-        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        // Verify OTP data was stored in Redis under both keys
         ArgumentCaptor<OtpData> otpDataCaptor = ArgumentCaptor.forClass(OtpData.class);
-        verify(valueOperations).set(
-                keyCaptor.capture(),
+        verify(valueOperations, times(2)).set(
+                anyString(),
                 otpDataCaptor.capture(),
                 eq(Duration.ofMinutes(20))
         );
 
-        assertEquals("otp:" + TEST_EMAIL.toLowerCase(), keyCaptor.getValue());
-        OtpData storedData = otpDataCaptor.getValue();
-        assertEquals(otp, storedData.getOtp());
+        OtpData storedData = otpDataCaptor.getAllValues().get(0);
+        assertNotNull(storedData.getOtp());
+        assertEquals(6, storedData.getOtp().length());
         assertEquals(TEST_USERNAME, storedData.getUsername());
         assertEquals(TEST_PASSWORD_HASH, storedData.getPassword());
+        assertNotNull(storedData.getToken());
+        assertEquals(TEST_EMAIL.toLowerCase(), storedData.getEmail());
 
-        // Verify email was sent
-        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(messageCaptor.capture());
-        assertEquals(TEST_EMAIL, messageCaptor.getValue().getTo()[0]);
-        assertEquals("Your Freelance Verification Code", messageCaptor.getValue().getSubject());
-        assertTrue(messageCaptor.getValue().getText().contains(otp));
+        // Verify email was sent via Resend
+        verify(emailService).sendVerificationEmail(eq(TEST_EMAIL), eq(token), anyString());
     }
 
     @Test
     void testGenerateAndSendOtp_RateLimitExceeded() {
-        // Arrange
-        when(valueOperations.increment(anyString())).thenReturn(5L); // Exceeds limit of 4
+        when(valueOperations.increment(anyString())).thenReturn(5L);
 
-        // Act & Assert
         IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> otpService.generateAndSendOtp(TEST_EMAIL, TEST_USERNAME, TEST_PASSWORD_HASH));
         assertEquals("Too many OTP requests. Please try again later.", exception.getMessage());
 
-        // Verify no OTP was stored or email sent
         verify(valueOperations, never()).set(anyString(), any(OtpData.class), any(Duration.class));
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        verify(emailService, never()).sendVerificationEmail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testValidateToken_Success() {
+        String token = "abc-123-def";
+        OtpData testData = new OtpData("123456", token, TEST_EMAIL.toLowerCase(), TEST_USERNAME, TEST_PASSWORD_HASH);
+        when(valueOperations.get("verify:token:" + token)).thenReturn(testData);
+
+        OtpData result = otpService.validateToken(token);
+
+        assertNotNull(result);
+        assertEquals(token, result.getToken());
+        assertEquals(TEST_USERNAME, result.getUsername());
+        assertEquals(TEST_PASSWORD_HASH, result.getPassword());
+
+        verify(redisTemplate).delete("verify:token:" + token);
+        verify(redisTemplate).delete("verify:email:" + TEST_EMAIL.toLowerCase());
+    }
+
+    @Test
+    void testValidateToken_Expired() {
+        when(valueOperations.get("verify:token:invalid-token")).thenReturn(null);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> otpService.validateToken("invalid-token"));
+        assertEquals("Verification link expired or invalid", exception.getMessage());
+
+        verify(redisTemplate, never()).delete(anyString());
     }
 
     @Test
     void testValidateOtp_Success() {
-        // Arrange
         String otp = "123456";
-        OtpData testData = new OtpData(otp, TEST_USERNAME, TEST_PASSWORD_HASH);
-        when(valueOperations.get("otp:" + TEST_EMAIL.toLowerCase())).thenReturn(testData);
+        OtpData testData = new OtpData(otp, "some-token", TEST_EMAIL.toLowerCase(), TEST_USERNAME, TEST_PASSWORD_HASH);
+        when(valueOperations.get("verify:email:" + TEST_EMAIL.toLowerCase())).thenReturn(testData);
 
-        // Act
         OtpData result = otpService.validateOtp(TEST_EMAIL, otp);
 
-        // Assert
         assertNotNull(result);
         assertEquals(otp, result.getOtp());
         assertEquals(TEST_USERNAME, result.getUsername());
-        assertEquals(TEST_PASSWORD_HASH, result.getPassword());
 
-        // Verify OTP was deleted from Redis after successful validation
-        verify(valueOperations).get("otp:" + TEST_EMAIL.toLowerCase());
-        verify(redisTemplate).delete("otp:" + TEST_EMAIL.toLowerCase());
+        verify(redisTemplate).delete("verify:email:" + TEST_EMAIL.toLowerCase());
+        verify(redisTemplate).delete("verify:token:some-token");
     }
 
     @Test
     void testValidateOtp_Expired() {
-        // Arrange
-        when(valueOperations.get("otp:" + TEST_EMAIL.toLowerCase())).thenReturn(null);
+        when(valueOperations.get("verify:email:" + TEST_EMAIL.toLowerCase())).thenReturn(null);
 
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> otpService.validateOtp(TEST_EMAIL, "123456"));
         assertEquals("OTP expired or not found", exception.getMessage());
 
-        // Verify delete was not called
         verify(redisTemplate, never()).delete(anyString());
     }
 
     @Test
     void testValidateOtp_InvalidOtp() {
-        // Arrange
-        String correctOtp = "123456";
-        OtpData testData = new OtpData(correctOtp, TEST_USERNAME, TEST_PASSWORD_HASH);
-        when(valueOperations.get("otp:" + TEST_EMAIL.toLowerCase())).thenReturn(testData);
+        OtpData testData = new OtpData("123456", "token", TEST_EMAIL.toLowerCase(), TEST_USERNAME, TEST_PASSWORD_HASH);
+        when(valueOperations.get("verify:email:" + TEST_EMAIL.toLowerCase())).thenReturn(testData);
 
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> otpService.validateOtp(TEST_EMAIL, "654321")); // Wrong OTP
+                () -> otpService.validateOtp(TEST_EMAIL, "654321"));
         assertEquals("Invalid OTP", exception.getMessage());
 
-        // Verify OTP was NOT deleted (since validation failed)
-        verify(valueOperations).get("otp:" + TEST_EMAIL.toLowerCase());
         verify(redisTemplate, never()).delete(anyString());
-    }
-
-    @Test
-    void testGenerateOtp_IsUsedInGenerateAndSendOtp() {
-        // We test this indirectly by verifying the generated OTP is 6 digits
-        // Arrange
-        when(valueOperations.increment(anyString())).thenReturn(1L);
-
-        // Act
-        String otp = otpService.generateAndSendOtp(TEST_EMAIL, TEST_USERNAME, TEST_PASSWORD_HASH);
-
-        // Assert
-        assertNotNull(otp);
-        assertEquals(6, otp.length());
-        assertTrue(otp.matches("\\d{6}")); // Should be all digits
-    }
-
-    @Test
-    void testSendOtpEmail_IsUsedInGenerateAndSendOtp() {
-        // We test this indirectly by verifying email is sent
-        // Arrange
-        when(valueOperations.increment(anyString())).thenReturn(1L);
-
-        // Act
-        otpService.generateAndSendOtp(TEST_EMAIL, TEST_USERNAME, TEST_PASSWORD_HASH);
-
-        // Assert
-        verify(mailSender).send(any(SimpleMailMessage.class));
-        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(messageCaptor.capture());
-
-        SimpleMailMessage message = messageCaptor.getValue();
-        assertEquals(TEST_EMAIL, message.getTo()[0]);
-        assertEquals("Your Freelance Verification Code", message.getSubject());
-        assertTrue(message.getText().contains("verification code is:"));
     }
 }

@@ -42,6 +42,18 @@ export async function verifyRegistration(email: string, otp: string) {
   return res.json()
 }
 
+export async function verifyRegistrationToken(token: string) {
+  const res = await fetch(`${API_BASE}/auth/register/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  })
+  if (!res.ok) {
+    throw new Error(await readApiError(res, 'Email verification failed'))
+  }
+  return res.json()
+}
+
 export async function login(email: string, password: string) {
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
