@@ -1,5 +1,12 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres-auth:5432/auth_db
+    url: ${AUTH_DB_URL}
     username: ${AUTH_DB_USER}
     password: ${AUTH_DB_PASS}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: true  # Upstash standard enforcement
