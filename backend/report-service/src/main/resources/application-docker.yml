@@ -1,8 +1,10 @@
 spring:
   data:
     redis:
-      host: redis
-      port: 6379
-
-tracking:
-  base-url: http://tracking-service:8082
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: true
+  tracking:
+    base-url: ${TRACKING_SERVICE_URL:http://tracking-service:8082}

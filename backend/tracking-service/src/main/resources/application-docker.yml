@@ -1,5 +1,5 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres-tracking:5432/tracking_db
+    url: ${TRACKING_DB_URL}
     username: ${TRACKING_DB_USER}
     password: ${TRACKING_DB_PASS}

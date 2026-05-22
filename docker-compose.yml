@@ -1,32 +1,7 @@
-# FreelanceCLI - local run with Docker
-# Usage: docker-compose up -d
-# API Gateway: http://localhost:8080
-# Web: run separately (npm run dev in web/)
+# FreelanceCLI - Local application run with Cloud/External Infrastructure
+# Usage: docker-compose --env-file ./backend/.env.docker up -d
 
 services:
-
-  postgres-auth:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${AUTH_DB_USER}
-      POSTGRES_PASSWORD: ${AUTH_DB_PASS}
-      POSTGRES_DB: auth_db
-    ports:
-      - "5432:5432"
-
-  postgres-tracking:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${TRACKING_DB_USER}
-      POSTGRES_PASSWORD: ${TRACKING_DB_PASS}
-      POSTGRES_DB: tracking_db
-    ports:
-      - "5433:5432"
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
 
   auth-service:
     build:
@@ -34,21 +9,17 @@ services:
       dockerfile: auth-service/Dockerfile
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      AUTH_DB_URL: ${AUTH_DB_URL}
       AUTH_DB_USER: ${AUTH_DB_USER}
       AUTH_DB_PASS: ${AUTH_DB_PASS}
       JWT_SECRET: ${JWT_SECRET}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USERNAME: ${SMTP_USERNAME}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      MAIL_FROM: ${MAIL_FROM}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM: ${RESEND_FROM}
     ports:
       - "8081:8081"
-    depends_on:
-      - postgres-auth
-      - redis
 
   tracking-service:
     build:
@@ -56,13 +27,12 @@ services:
       dockerfile: tracking-service/Dockerfile
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      TRACKING_DB_URL: ${TRACKING_DB_URL}
       TRACKING_DB_USER: ${TRACKING_DB_USER}
       TRACKING_DB_PASS: ${TRACKING_DB_PASS}
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8082:8082"
-    depends_on:
-      - postgres-tracking
 
   report-service:
     build:
@@ -71,11 +41,12 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      TRACKING_SERVICE_URL: http://tracking-service:8082
     ports:
       - "8083:8083"
-    depends_on:
-      - redis
-      - tracking-service
 
   api-gateway:
     build:
@@ -88,7 +59,3 @@ services:
       GATEWAY_REPORTS_URI: http://report-service:8083
     ports:
       - "8080:8080"
-    depends_on:
-      - auth-service
-      - tracking-service
-      - report-service
