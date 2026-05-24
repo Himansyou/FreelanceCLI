@@ -18,6 +18,8 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM: ${RESEND_FROM}
+      FRONTEND_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS}
+      RESEND_VERIFY_BASE_URL: ${RESEND_VERIFY_BASE_URL}
     ports:
       - "8081:8081"
 
@@ -31,6 +33,7 @@ services:
       TRACKING_DB_USER: ${TRACKING_DB_USER}
       TRACKING_DB_PASS: ${TRACKING_DB_PASS}
       JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS}
     ports:
       - "8082:8082"
 
@@ -45,6 +48,7 @@ services:
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       TRACKING_SERVICE_URL: http://tracking-service:8082
+      FRONTEND_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS}
     ports:
       - "8083:8083"
 
@@ -57,5 +61,6 @@ services:
       GATEWAY_AUTH_URI: http://auth-service:8081
       GATEWAY_TRACKING_URI: http://tracking-service:8082
       GATEWAY_REPORTS_URI: http://report-service:8083
+      FRONTEND_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS}
     ports:
       - "8080:8080"
