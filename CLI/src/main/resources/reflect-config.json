@@ -7,5 +7,24 @@
     "allPublicFields": true,
     "allDeclaredMethods": true,
     "allPublicMethods": true
-  }
+  },
+  {
+  "name": "org.himansyou.api.ApiClient$SyncRequestPayload",
+  "allDeclaredConstructors": true,
+  "allDeclaredMethods": true,
+  "allDeclaredFields": true
+  },
+  {
+  "name": "org.himansyou.api.ApiClient$SessionPayload",
+  "allDeclaredConstructors": true,
+  "allDeclaredMethods": true,
+  "allDeclaredFields": true
+  },
+  {
+  "name": "org.himansyou.api.ApiClient$SessionPayload",
+  "allDeclaredConstructors": true,
+  "allDeclaredFields": true,
+  "allDeclaredMethods": true,
+  "allPublicMethods": true
+}
 ]
