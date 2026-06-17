@@ -22,7 +22,7 @@ spring:
         show-details: always
 
 jwt:
-  secret: ${JWT_SECRET:dev-secret}
+  secret: ${JWT_SECRET}
   expiration-ms: 259200000
 
 resend:

@@ -6,7 +6,9 @@ spring:
       password: ${REDIS_PASSWORD}
       ssl:
         enabled: true
-  tracking:
-    base-url: ${TRACKING_SERVICE_URL:http://tracking-service:8082}
+
+tracking:
+  base-url: ${TRACKING_SERVICE_URL:http://tracking-service:8082}
+
 auth:
   base-url: ${AUTH_BASE_URL:http://auth-service:8081}
