@@ -48,6 +48,7 @@ services:
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       TRACKING_SERVICE_URL: http://tracking-service:8082
+      AUTH_BASE_URL: http://auth-service:8081
       FRONTEND_ALLOWED_ORIGINS: ${FRONTEND_ALLOWED_ORIGINS}
     ports:
       - "8083:8083"

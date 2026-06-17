@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -18,7 +19,7 @@ import java.util.Map;
 @Component
 public class ProjectSettingsClient {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${tracking.base-url:http://localhost:8082}")
@@ -26,6 +27,13 @@ public class ProjectSettingsClient {
 
     @Value("${auth.base-url:http://localhost:8081}")
     private String authBaseUrl;
+
+    public ProjectSettingsClient() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5_000);
+        factory.setReadTimeout(10_000);
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     /** Fetches all project settings for a user. */
     public Map<String, Double> getProjectRates(String bearerToken) {

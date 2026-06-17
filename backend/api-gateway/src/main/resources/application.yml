@@ -28,3 +28,6 @@ spring:
           uri: ${GATEWAY_REPORTS_URI}
           predicates:
             - Path=/reports/**
+          metadata:
+            response-timeout: 30000
+            connect-timeout: 5000

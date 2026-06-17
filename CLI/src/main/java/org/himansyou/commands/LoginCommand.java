@@ -22,7 +22,7 @@ public class LoginCommand implements Runnable {
     @Option(names = {"-p", "--password"}, description = "Password (or will prompt)")
     String password;
 
-    @Option(names = {"--api-url"}, description = "API base URL", defaultValue = "http://localhost:8080")
+    @Option(names = {"--api-url"}, description = "API base URL", defaultValue = "https://cliapi.himansyou.online")
     String apiUrl;
 
     @Override

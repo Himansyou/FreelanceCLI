@@ -29,7 +29,13 @@ public class ApiClient {
      * Login and return LoginResult or throw on error.
      */
     public LoginResult login(String email, String password) throws IOException {
-        String body = mapper.writeValueAsString(new LoginBody(email, password));
+        String body =
+    """
+    {
+      "email":"%s",
+      "password":"%s"
+    }
+    """.formatted(email, password);
         Request request = new Request.Builder()
             .url(baseUrl + "/auth/login")
             .post(RequestBody.create(body, JSON))
@@ -51,8 +57,26 @@ public class ApiClient {
      * Sync sessions (idempotent). Requires valid Bearer token.
      */
     public SyncResult sync(String bearerToken, List<SessionPayload> sessions) throws IOException {
-        SyncRequestPayload payload = new SyncRequestPayload(sessions);
-        String body = mapper.writeValueAsString(payload);
+        var sessionsArray = mapper.createArrayNode();
+
+    for (SessionPayload s : sessions) {
+        var node = mapper.createObjectNode();
+
+        node.put("id", s.id().toString());
+        node.put("projectId", s.projectId());
+        node.put("startTime", s.startTime());
+        node.put("endTime", s.endTime());
+        node.put("durationMinutes", s.durationMinutes());
+        node.put("deviceId", s.deviceId());
+
+        sessionsArray.add(node);
+    }
+
+    var requestBody = mapper.createObjectNode();
+    requestBody.set("sessions", sessionsArray);
+
+    String body = mapper.writeValueAsString(requestBody);
+        
         Request request = new Request.Builder()
             .url(baseUrl + "/tracking/sessions/sync")
             .addHeader("Authorization", "Bearer " + bearerToken)
@@ -63,7 +87,11 @@ public class ApiClient {
                 throw new IOException("Sync failed: " + response.code());
             }
             JsonNode root = mapper.readTree(response.body().string());
-            return new SyncResult(root.get("synced").asInt(), root.get("rejected").asInt());
+
+            return new SyncResult(
+                root.get("synced").asInt(),
+                root.get("rejected").asInt()
+            );
         }
     }
 

@@ -18,7 +18,7 @@ import java.util.UUID;
 @Command(name = "sync", description = "Sync local sessions to the backend")
 public class SyncCommand implements Runnable {
 
-    @Option(names = {"--api-url"}, description = "API base URL", defaultValue = "http://localhost:8080")
+    @Option(names = {"--api-url"}, description = "API base URL", defaultValue = "https://cliapi.himansyou.online")
     String apiUrl;
 
     @Override
