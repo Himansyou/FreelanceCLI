@@ -20,7 +20,7 @@ import java.util.Collections;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
-    static final String AUTH_ERROR_ATTR = "jwtAuthError";
+    public static final String AUTH_ERROR_ATTR = "jwtAuthError";
 
     private final JwtService jwtService;
 
