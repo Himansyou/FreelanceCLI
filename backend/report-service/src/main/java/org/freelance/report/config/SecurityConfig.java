@@ -32,9 +32,11 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
             .exceptionHandling(e -> e
                 .authenticationEntryPoint((req, res, ex) -> {
+                    String detail = (String) req.getAttribute(JwtAuthFilter.AUTH_ERROR_ATTR);
+                    String msg = detail != null ? detail : "No token provided";
                     res.setContentType("application/json");
                     res.setStatus(401);
-                    res.getWriter().write("{\"error\":\"Unauthorized - invalid or missing token\"}");
+                    res.getWriter().write("{\"error\":\"" + msg + "\"}");
                 }))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

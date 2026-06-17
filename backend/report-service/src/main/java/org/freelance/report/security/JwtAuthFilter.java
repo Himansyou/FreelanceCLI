@@ -20,6 +20,7 @@ import java.util.Collections;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
+    static final String AUTH_ERROR_ATTR = "jwtAuthError";
 
     private final JwtService jwtService;
 
@@ -35,7 +36,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.warn("No Authorization header or not Bearer for {} {}", request.getMethod(), request.getRequestURI());
+            request.setAttribute(AUTH_ERROR_ATTR, "Missing or invalid Authorization header");
             filterChain.doFilter(request, response);
             return;
         }
@@ -51,6 +52,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             log.error("JWT validation failed for {} {}: {}", request.getMethod(), request.getRequestURI(), e.getMessage());
+            request.setAttribute(AUTH_ERROR_ATTR, "Token validation failed: " + e.getMessage());
         }
         filterChain.doFilter(request, response);
     }
